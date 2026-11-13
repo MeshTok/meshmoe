@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MeshMoe — 把你的闲置算力，变成社区的记忆</title>
+<meta name="description" content="MeshMoe 是全球第一个荣誉驱动的分布式 AI 算力社区。装完即得免费本地 AI，闲时算力汇入网络，以焦耳计量贡献。每台电脑都是一位专家。">
+<meta property="og:title" content="MeshMoe — 把你的闲置算力，变成社区的记忆">
+<meta property="og:description" content="免费本地 AI + 荣誉驱动算力社区。装完即用，闲时入网，燃烧焦耳，留下你的名字。">
+<meta property="og:type" content="website">
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='12' fill='%230a0e0a'/%3E%3Ccircle cx='32' cy='32' r='6' fill='%2300ff9c'/%3E%3Ccircle cx='14' cy='14' r='3.5' fill='%2300ff9c'/%3E%3Ccircle cx='50' cy='14' r='3.5' fill='%2300ff9c'/%3E%3Ccircle cx='14' cy='50' r='3.5' fill='%2300ff9c'/%3E%3Ccircle cx='50' cy='50' r='3.5' fill='%2300ff9c'/%3E%3C/svg%3E">
+<style>
+:root{
+  --bg:#0a0e0a; --bg2:#0e150f; --panel:#111a12; --line:#1d2b20;
+  --green:#00ff9c; --green-dim:#00c978; --text:#e8f5ee; --muted:#8fa89a;
+  --amber:#ffc861;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{background:var(--bg);color:var(--text);font-family:-apple-system,"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif;line-height:1.7;overflow-x:hidden}
+a{color:var(--green);text-decoration:none}
+.wrap{max-width:1080px;margin:0 auto;padding:0 24px}
+nav{position:sticky;top:0;z-index:50;background:rgba(10,14,10,.85);backdrop-filter:blur(12px);border-bottom:1px solid var(--line)}
+nav .wrap{display:flex;align-items:center;justify-content:space-between;height:64px}
+.logo{display:flex;align-items:center;gap:10px;font-weight:700;font-size:18px;color:var(--text)}
+.logo svg{width:28px;height:28px}
+.nav-links{display:flex;gap:28px;font-size:14px}
+.nav-links a{color:var(--muted)}
+.nav-links a:hover{color:var(--green)}
+.cta-btn{display:inline-block;background:var(--green);color:#04170d;font-weight:700;padding:12px 28px;border-radius:10px;font-size:15px;transition:.2s}
+.cta-btn:hover{transform:translateY(-2px);box-shadow:0 8px 30px rgba(0,255,156,.25)}
+.cta-ghost{display:inline-block;border:1px solid var(--green-dim);color:var(--green);padding:11px 26px;border-radius:10px;font-size:15px;margin-left:14px;transition:.2s}
+.cta-ghost:hover{background:rgba(0,255,156,.08)}
+header{padding:110px 0 90px;text-align:center;position:relative}
+header::before{content:"";position:absolute;inset:0;background:
+  radial-gradient(ellipse 600px 300px at 50% -10%, rgba(0,255,156,.12), transparent),
+  repeating-linear-gradient(0deg, transparent 0 39px, var(--line) 39px 40px),
+  repeating-linear-gradient(90deg, transparent 0 39px, var(--line) 39px 40px);
+  opacity:.5;pointer-events:none}
+.tagline{display:inline-block;border:1px solid var(--green-dim);color:var(--green);font-size:13px;padding:5px 16px;border-radius:99px;margin-bottom:26px;letter-spacing:1px}
+h1{font-size:46px;font-weight:800;line-height:1.25;letter-spacing:-.5px}
+h1 em{font-style:normal;color:var(--green)}
+.sub{color:var(--muted);font-size:17px;max-width:640px;margin:22px auto 40px}
+h2{font-size:30px;font-weight:700;margin-bottom:14px}
+h2 em{font-style:normal;color:var(--green)}
+.sec{padding:90px 0;border-top:1px solid var(--line)}
+.sec-head{text-align:center;margin-bottom:56px}
+.sec-head p{color:var(--muted)}
+.grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:20px}
+.grid4{display:grid;grid-template-columns:repeat(4,1fr);gap:20px}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:28px;transition:.2s}
+.card:hover{border-color:var(--green-dim);transform:translateY(-3px)}
+.card h3{font-size:17px;margin-bottom:10px}
+.card .num{color:var(--green);font-size:13px;font-weight:700;letter-spacing:1px;display:block;margin-bottom:12px}
+.card p{color:var(--muted);font-size:14px}
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin:50px 0 0}
+.stat{background:var(--bg2);border:1px solid var(--line);border-radius:12px;padding:22px;text-align:center}
+.stat b{display:block;font-size:28px;color:var(--green);font-weight:800}
+.stat span{font-size:13px;color:var(--muted)}
+.ranks{display:flex;gap:14px;flex-wrap:wrap;justify-content:center;margin-top:36px}
+.rank{background:var(--bg2);border:1px solid var(--line);border-radius:10px;padding:14px 22px;text-align:center;min-width:150px}
+.rank b{display:block;color:var(--green);font-size:15px}
+.rank span{font-size:12px;color:var(--muted)}
+.badge-genesis{background:linear-gradient(135deg,rgba(255,200,97,.12),rgba(255,200,97,.03));border:1px solid rgba(255,200,97,.4);border-radius:14px;padding:34px;margin-top:26px;display:flex;gap:24px;align-items:center}
+.badge-genesis .medal{font-size:44px}
+.idcard{background:var(--bg2);border:1px solid var(--green-dim);border-radius:14px;padding:26px 30px;max-width:520px;margin:36px auto 0;font-family:ui-monospace,Consolas,monospace;font-size:14px}
+.idcard .row{display:flex;justify-content:space-between;padding:7px 0;border-bottom:1px dashed var(--line)}
+.idcard .row:last-child{border:none}
+.idcard .k{color:var(--muted)}
+.idcard .v{color:var(--green)}
+.roadmap{max-width:760px;margin:0 auto}
+.phase{display:flex;gap:22px;margin-bottom:14px}
+.phase .dot{flex-shrink:0;width:44px;height:44px;border-radius:50%;border:2px solid var(--green);display:flex;align-items:center;justify-content:center;color:var(--green);font-weight:800;background:var(--bg2)}
+.phase.now .dot{background:var(--green);color:#04170d}
+.phase .body{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:20px 24px;flex:1}
+.phase .body h3{font-size:16px;margin-bottom:6px}
+.phase .body h3 small{color:var(--muted);font-weight:400;margin-left:10px;font-size:13px}
+.phase .body p{color:var(--muted);font-size:14px}
+.phase.now .body{border-color:var(--green-dim)}
+.faq details{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:18px 24px;margin-bottom:12px}
+.faq summary{cursor:pointer;font-weight:600;font-size:15px}
+.faq details p{color:var(--muted);font-size:14px;margin-top:10px}
+.final-cta{text-align:center;padding:100px 0;border-top:1px solid var(--line)}
+.final-cta h2{margin-bottom:16px}
+footer{border-top:1px solid var(--line);padding:40px 0;color:var(--muted);font-size:13px;text-align:center}
+footer .wrap{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px}
+@media(max-width:760px){
+  h1{font-size:32px}
+  .grid3,.grid4,.stats{grid-template-columns:1fr 1fr}
+  .nav-links{display:none}
+  .badge-genesis{flex-direction:column;text-align:center}
+}
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="wrap">
+    <a class="logo" href="#">
+      <svg viewBox="0 0 64 64"><rect width="64" height="64" rx="12" fill="#111a12"/><circle cx="32" cy="32" r="6" fill="#00ff9c"/><circle cx="14" cy="14" r="3.5" fill="#00ff9c"/><circle cx="50" cy="14" r="3.5" fill="#00ff9c"/><circle cx="14" cy="50" r="3.5" fill="#00ff9c"/><circle cx="50" cy="50" r="3.5" fill="#00ff9c"/><line x1="32" y1="32" x2="14" y2="14" stroke="#00ff9c" stroke-width="1.6" opacity=".7"/><line x1="32" y1="32" x2="50" y2="14" stroke="#00ff9c" stroke-width="1.6" opacity=".7"/><line x1="32" y1="32" x2="14" y2="50" stroke="#00ff9c" stroke-width="1.6" opacity=".7"/><line x1="32" y1="32" x2="50" y2="50" stroke="#00ff9c" stroke-width="1.6" opacity=".7"/></svg>
+      MeshMoe
+    </a>
+    <div class="nav-links">
+      <a href="#how">工作原理</a>
+      <a href="#model">MeshMoe-4B</a>
+      <a href="#honor">荣誉体系</a>
+      <a href="#roadmap">路线图</a>
+      <a href="#faq">FAQ</a>
+    </div>
+    <a class="cta-btn" href="#join" style="padding:9px 20px;font-size:14px">成为创世节点</a>
+  </div>
+</nav>
+
+<header>
+  <div class="wrap">
+    <span class="tagline">GENESIS NODES · 创世节点招募中 · 前 1000 名</span>
+    <h1>把你的闲置算力，<br>变成<em>社区的记忆</em></h1>
+    <p class="sub">MeshMoe 是全球第一个<b style="color:var(--text)">荣誉驱动</b>的分布式 AI 算力社区。装完即得免费本地 AI；闲时，你的电脑入网成为一位专家，以「焦耳」留下你的贡献——只增不减，全网可查。</p>
+    <a class="cta-btn" href="#join">认领创世节点编号</a>
+    <a class="cta-ghost" href="#model">看看模型实测成绩</a>
+  </div>
+</header>
+
+<section class="sec" id="how">
+  <div class="wrap">
+    <div class="sec-head">
+      <h2>三步开始，<em>零注册</em></h2>
+      <p>不需要账号，不需要 API Key，不需要付费——装完就能用。</p>
+    </div>
+    <div class="grid3">
+      <div class="card">
+        <span class="num">STEP 01</span>
+        <h3>一键安装</h3>
+        <p>通过 DSH 插件或 MeshMoe Desktop 安装。自动下载 MeshMoe-4B（仅 2.7GB），自动配置，全程无感。办公本、无独显的旧电脑都能跑。</p>
+      </div>
+      <div class="card">
+        <span class="num">STEP 02</span>
+        <h3>本地免费 AI</h3>
+        <p>聊天、写代码、跑 agent 任务——全部在你自己的电脑上推理，数据不出门，永远免费无限，不耗任何网络资源。</p>
+      </div>
+      <div class="card">
+        <span class="num">STEP 03</span>
+        <h3>闲时燃烧焦耳</h3>
+        <p>电脑空闲时，节点自动领取社区任务，帮别人跑 AI。每完成一单，你的贡献值 +N 焦耳——这是真实的能量：J = 功率 × 时间。</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="sec" id="model">
+  <div class="wrap">
+    <div class="sec-head">
+      <h2>MeshMoe-4B：<em>小身材，专家级工具调用</em></h2>
+      <p>RTX 3050 笔记本实测数据，非实验室跑分。</p>
+    </div>
+    <div class="stats">
+      <div class="stat"><b>95.8%</b><span>函数调用准确率<br>（24 例含 8 个反例）</span></div>
+      <div class="stat"><b>45 t/s</b><span>生成速度<br>（8GB 显存笔记本）</span></div>
+      <div class="stat"><b>2.7 GB</b><span>安装体积<br>（Q4_K_M，纯 CPU 也能跑）</span></div>
+      <div class="stat"><b>32K</b><span>上下文窗口<br>（agent 任务实测够用）</span></div>
+    </div>
+    <div class="grid3" style="margin-top:26px">
+      <div class="card"><h3>Apache 2.0</h3><p>基于开源 Qwen3.5 / NeoHorse-1 深度改训，许可完全自控，可商用可再分发。</p></div>
+      <div class="card"><h3>原生 Agent</h3><p>工具调用是它的强项——真实任务实测：能创建文件、查数据、连环调用，不是玩具。</p></div>
+      <div class="card"><h3>持续进化</h3><p>全网真实任务轨迹回流训练下一代。你贡献的每条轨迹都可能署名进致谢名单。</p></div>
+    </div>
+  </div>
+</section>
+
+<section class="sec" id="honor">
+  <div class="wrap">
+    <div class="sec-head">
+      <h2>荣誉体系：<em>极客的母语</em></h2>
+      <p>我们不发钱。BOINC 用荣誉点亮了 300 万台设备，我们继承这套方法论。</p>
+    </div>
+    <div class="grid4">
+      <div class="card"><span class="num">单位</span><h3>焦耳 Joule</h3><p>每次推理 = 一次真实能量贡献。只增不减、不可消费、不可转赠。作弊？伪造物理做功比伪造积分贵得多。</p></div>
+      <div class="card"><span class="num">身份</span><h3>五级称号</h3><p>Contributor → Maker → Maintainer → Core → Legend（全网仅 100 席）。开源社区文化词系。</p></div>
+      <div class="card"><span class="num">社交</span><h3>战队对抗</h3><p>建战队、打周赛、占城市榜。拉一个战队 = 拉一批人，排行榜是最诚实的裂变引擎。</p></div>
+      <div class="card"><span class="num">署名</span><h3>进入训练集</h3><p>你的轨迹被选中训练 MeshMoe-5？你的名字进致谢名单——社区最高等级的认可。</p></div>
+    </div>
+    <div class="badge-genesis">
+      <div class="medal">🏆</div>
+      <div>
+        <h3 style="margin-bottom:8px">创世节点 · 前 1000 名</h3>
+        <p style="color:var(--muted);font-size:14px">永久编号 + 独占徽章，社区史前化石，永不补发。创始团队的节点编号和焦耳数公开挂在官网——以身作则，说到做到。</p>
+      </div>
+    </div>
+    <div class="idcard">
+      <div class="row"><span class="k">NODE</span><span class="v">#0817 · 创世节点</span></div>
+      <div class="row"><span class="k">RANK</span><span class="v">Maintainer 维护者</span></div>
+      <div class="row"><span class="k">TASKS</span><span class="v">12,480 次推理</span></div>
+      <div class="row"><span class="k">JOULE</span><span class="v">892,301 J 燃烧中</span></div>
+      <div class="row"><span class="k">EQUIV</span><span class="v">≈ 41 小时算力捐献</span></div>
+    </div>
+  </div>
+</section>
+
+<section class="sec" id="roadmap">
+  <div class="wrap">
+    <div class="sec-head">
+      <h2>路线图：<em>百万专家的质变</em></h2>
+      <p>三个阶段，每一步都踩在上一步的肩膀上。</p>
+    </div>
+    <div class="roadmap">
+      <div class="phase now">
+        <div class="dot">1</div>
+        <div class="body">
+          <h3>极客社区 <small>0 → 1 万节点 · 进行中</small></h3>
+          <p>DSH 插件上架、创世节点计划、MeshMoe Desktop 打包。全网统一底座，先把社区立起来。</p>
+        </div>
+      </div>
+      <div class="phase">
+        <div class="dot">2</div>
+        <div class="body">
+          <h3>社区扩张 <small>1 万 → 30 万节点</small></h3>
+          <p>战队系统上线、专业路由（代码任务派给代码专家）、真实轨迹回流训练 MeshMoe-4B v2——社区开始喂养自己的模型。</p>
+        </div>
+      </div>
+      <div class="phase">
+        <div class="dot">3</div>
+        <div class="body">
+          <h3>能力质变 <small>30 万 → 100 万+</small></h3>
+          <p>可验证奖励 RL 闭环，窄域专家击败通用旗舰，全网一条命令完成模型升级。百万台电脑，一个会自我进化的大脑。</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="sec faq" id="faq">
+  <div class="wrap">
+    <div class="sec-head"><h2>FAQ</h2></div>
+    <details><summary>真的免费吗？靠什么活？</summary><p>本地推理永远免费——它跑在你自己的电脑上，我们没有任何成本。社区调用的空闲算力由节点自愿贡献（换焦耳荣誉）。未来收入来自企业 API 和对无卡用户的单向充值，社区用户永远免费。我们不出售数据，不给荣誉明码标价。</p></details>
+    <details><summary>焦耳能换成钱吗？</summary><p>不能，永远不能。焦耳是荣誉，不是货币——不可消费、不可转赠、不可兑换。这正是它干净的原因：没有金融属性，没有套利空间，没有薅羊毛的动机。</p></details>
+    <details><summary>会偷我的数据吗？</summary><p>本地推理的数据 100% 不出门。供网任务的内容只存在于任务通道中。训练数据回流需要你单独勾选授权、默认关闭、随时可撤回，脱敏标准全部公开。</p></details>
+    <details><summary>我的电脑很旧，能参与吗？</summary><p>能。MeshMoe-4B 纯 CPU 4GB 内存即可运行——慢一点，但照样贡献焦耳。有 24GB 显卡？可以装塔尖档 Qwen3.8-27B，处理更难的任务，燃烧更快。</p></details>
+    <details><summary>为什么叫 MeshMoe？</summary><p>Mesh（网格）+ MoE（Mixture of Experts 混合专家）。模型级 MoE 里，路由器把每个词派给最合适的专家子网络；MeshMoe 把这件事放大到网络级——Router 把每个任务派给最合适的那台电脑。百万台电脑，一个专家混合大脑。</p></details>
+  </div>
+</section>
+
+<section class="final-cta" id="join">
+  <div class="wrap">
+    <h2>编号 <em>#0001</em> 已经有了，<br>下一个是你的吗？</h2>
+    <p style="color:var(--muted);margin-bottom:36px">创世节点永不补发。装上 MeshMoe，留下你在社区的第一枚焦耳。</p>
+    <a class="cta-btn" href="https://github.com/" style="font-size:16px;padding:14px 34px">认领创世节点</a>
+    <a class="cta-ghost" href="/">English</a>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap">
+    <span>© 2026 MeshMoe · 把你的闲置算力，变成社区的记忆</span>
+    <span>
+      <a href="/privacy.html">隐私</a> · <a href="/terms.html">条款</a> · <a href="/status">网络状态</a> · <a href="/">English</a>
+    </span>
+  </div>
+</footer>
+
+<script>
+document.querySelectorAll('a[href^="#"]').forEach(a=>{
+  a.addEventListener('click',e=>{
+    const t=document.querySelector(a.getAttribute('href'));
+    if(t){e.preventDefault();t.scrollIntoView({behavior:'smooth'})}
+  });
+});
+</script>
+</body>
+</html>

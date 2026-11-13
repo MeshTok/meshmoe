@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MeshMoe — Turn Your Idle Compute Into Community Memory</title>
+<meta name="description" content="MeshMoe is the first honor-driven distributed AI compute network. Install once, get free local AI forever. When idle, your machine joins the mesh as an expert and burns Joules. Every computer is a specialist.">
+<meta property="og:title" content="MeshMoe — Turn Your Idle Compute Into Community Memory">
+<meta property="og:description" content="Free local AI + honor-driven compute network. Install and run, contribute when idle, burn Joules, leave your name on the leaderboard.">
+<meta property="og:type" content="website">
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='12' fill='%230a0e0a'/%3E%3Ccircle cx='32' cy='32' r='6' fill='%2300ff9c'/%3E%3Ccircle cx='14' cy='14' r='3.5' fill='%2300ff9c'/%3E%3Ccircle cx='50' cy='14' r='3.5' fill='%2300ff9c'/%3E%3Ccircle cx='14' cy='50' r='3.5' fill='%2300ff9c'/%3E%3Ccircle cx='50' cy='50' r='3.5' fill='%2300ff9c'/%3E%3C/svg%3E">
+<style>
+:root{
+  --bg:#0a0e0a; --bg2:#0e150f; --panel:#111a12; --line:#1d2b20;
+  --green:#00ff9c; --green-dim:#00c978; --text:#e8f5ee; --muted:#8fa89a;
+  --amber:#ffc861;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{background:var(--bg);color:var(--text);font-family:-apple-system,"Segoe UI",Inter,Roboto,sans-serif;line-height:1.7;overflow-x:hidden}
+a{color:var(--green);text-decoration:none}
+.wrap{max-width:1080px;margin:0 auto;padding:0 24px}
+nav{position:sticky;top:0;z-index:50;background:rgba(10,14,10,.85);backdrop-filter:blur(12px);border-bottom:1px solid var(--line)}
+nav .wrap{display:flex;align-items:center;justify-content:space-between;height:64px}
+.logo{display:flex;align-items:center;gap:10px;font-weight:700;font-size:18px;color:var(--text)}
+.logo svg{width:28px;height:28px}
+.nav-links{display:flex;gap:28px;font-size:14px}
+.nav-links a{color:var(--muted)}
+.nav-links a:hover{color:var(--green)}
+.cta-btn{display:inline-block;background:var(--green);color:#04170d;font-weight:700;padding:12px 28px;border-radius:10px;font-size:15px;transition:.2s}
+.cta-btn:hover{transform:translateY(-2px);box-shadow:0 8px 30px rgba(0,255,156,.25)}
+.cta-ghost{display:inline-block;border:1px solid var(--green-dim);color:var(--green);padding:11px 26px;border-radius:10px;font-size:15px;margin-left:14px;transition:.2s}
+.cta-ghost:hover{background:rgba(0,255,156,.08)}
+header{padding:110px 0 90px;text-align:center;position:relative}
+header::before{content:"";position:absolute;inset:0;background:
+  radial-gradient(ellipse 600px 300px at 50% -10%, rgba(0,255,156,.12), transparent),
+  repeating-linear-gradient(0deg, transparent 0 39px, var(--line) 39px 40px),
+  repeating-linear-gradient(90deg, transparent 0 39px, var(--line) 39px 40px);
+  opacity:.5;pointer-events:none}
+.tagline{display:inline-block;border:1px solid var(--green-dim);color:var(--green);font-size:13px;padding:5px 16px;border-radius:99px;margin-bottom:26px;letter-spacing:1px}
+h1{font-size:48px;font-weight:800;line-height:1.25;letter-spacing:-.5px}
+h1 em{font-style:normal;color:var(--green)}
+.sub{color:var(--muted);font-size:17px;max-width:660px;margin:22px auto 40px}
+h2{font-size:30px;font-weight:700;margin-bottom:14px}
+h2 em{font-style:normal;color:var(--green)}
+.sec{padding:90px 0;border-top:1px solid var(--line)}
+.sec-head{text-align:center;margin-bottom:56px}
+.sec-head p{color:var(--muted)}
+.grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:20px}
+.grid4{display:grid;grid-template-columns:repeat(4,1fr);gap:20px}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:28px;transition:.2s}
+.card:hover{border-color:var(--green-dim);transform:translateY(-3px)}
+.card h3{font-size:17px;margin-bottom:10px}
+.card .num{color:var(--green);font-size:13px;font-weight:700;letter-spacing:1px;display:block;margin-bottom:12px}
+.card p{color:var(--muted);font-size:14px}
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin:50px 0 0}
+.stat{background:var(--bg2);border:1px solid var(--line);border-radius:12px;padding:22px;text-align:center}
+.stat b{display:block;font-size:28px;color:var(--green);font-weight:800}
+.stat span{font-size:13px;color:var(--muted)}
+.ranks{display:flex;gap:14px;flex-wrap:wrap;justify-content:center;margin-top:36px}
+.rank{background:var(--bg2);border:1px solid var(--line);border-radius:10px;padding:14px 22px;text-align:center;min-width:150px}
+.rank b{display:block;color:var(--green);font-size:15px}
+.rank span{font-size:12px;color:var(--muted)}
+.badge-genesis{background:linear-gradient(135deg,rgba(255,200,97,.12),rgba(255,200,97,.03));border:1px solid rgba(255,200,97,.4);border-radius:14px;padding:34px;margin-top:26px;display:flex;gap:24px;align-items:center}
+.badge-genesis .medal{font-size:44px}
+.idcard{background:var(--bg2);border:1px solid var(--green-dim);border-radius:14px;padding:26px 30px;max-width:520px;margin:36px auto 0;font-family:ui-monospace,Consolas,monospace;font-size:14px}
+.idcard .row{display:flex;justify-content:space-between;padding:7px 0;border-bottom:1px dashed var(--line)}
+.idcard .row:last-child{border:none}
+.idcard .k{color:var(--muted)}
+.idcard .v{color:var(--green)}
+.roadmap{max-width:760px;margin:0 auto}
+.phase{display:flex;gap:22px;margin-bottom:14px}
+.phase .dot{flex-shrink:0;width:44px;height:44px;border-radius:50%;border:2px solid var(--green);display:flex;align-items:center;justify-content:center;color:var(--green);font-weight:800;background:var(--bg2)}
+.phase.now .dot{background:var(--green);color:#04170d}
+.phase .body{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:20px 24px;flex:1}
+.phase .body h3{font-size:16px;margin-bottom:6px}
+.phase .body h3 small{color:var(--muted);font-weight:400;margin-left:10px;font-size:13px}
+.phase .body p{color:var(--muted);font-size:14px}
+.phase.now .body{border-color:var(--green-dim)}
+.faq details{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:18px 24px;margin-bottom:12px}
+.faq summary{cursor:pointer;font-weight:600;font-size:15px}
+.faq details p{color:var(--muted);font-size:14px;margin-top:10px}
+.final-cta{text-align:center;padding:100px 0;border-top:1px solid var(--line)}
+.final-cta h2{margin-bottom:16px}
+footer{border-top:1px solid var(--line);padding:40px 0;color:var(--muted);font-size:13px;text-align:center}
+footer .wrap{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px}
+@media(max-width:760px){
+  h1{font-size:32px}
+  .grid3,.grid4,.stats{grid-template-columns:1fr 1fr}
+  .nav-links{display:none}
+  .badge-genesis{flex-direction:column;text-align:center}
+}
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="wrap">
+    <a class="logo" href="#">
+      <svg viewBox="0 0 64 64"><rect width="64" height="64" rx="12" fill="#111a12"/><circle cx="32" cy="32" r="6" fill="#00ff9c"/><circle cx="14" cy="14" r="3.5" fill="#00ff9c"/><circle cx="50" cy="14" r="3.5" fill="#00ff9c"/><circle cx="14" cy="50" r="3.5" fill="#00ff9c"/><circle cx="50" cy="50" r="3.5" fill="#00ff9c"/><line x1="32" y1="32" x2="14" y2="14" stroke="#00ff9c" stroke-width="1.6" opacity=".7"/><line x1="32" y1="32" x2="50" y2="14" stroke="#00ff9c" stroke-width="1.6" opacity=".7"/><line x1="32" y1="32" x2="14" y2="50" stroke="#00ff9c" stroke-width="1.6" opacity=".7"/><line x1="32" y1="32" x2="50" y2="50" stroke="#00ff9c" stroke-width="1.6" opacity=".7"/></svg>
+      MeshMoe
+    </a>
+    <div class="nav-links">
+      <a href="#how">How It Works</a>
+      <a href="#model">MeshMoe-4B</a>
+      <a href="#honor">Honor System</a>
+      <a href="#roadmap">Roadmap</a>
+      <a href="#faq">FAQ</a>
+    </div>
+    <a class="cta-btn" href="#join" style="padding:9px 20px;font-size:14px">Become a Genesis Node</a>
+  </div>
+</nav>
+
+<header>
+  <div class="wrap">
+    <span class="tagline">GENESIS NODES · NOW RECRUITING · FIRST 1,000</span>
+    <h1>Turn your idle compute<br>into <em>community memory</em></h1>
+    <p class="sub">MeshMoe is the first <b style="color:var(--text)">honor-driven</b> distributed AI compute network. Install once and get free local AI forever. When your machine sits idle, it joins the mesh as a specialist and burns <b style="color:var(--text)">Joules</b> — a permanent, public record of what you gave. Nothing is ever subtracted.</p>
+    <a class="cta-btn" href="#join">Claim a Genesis Node number</a>
+    <a class="cta-ghost" href="#model">See the real benchmarks</a>
+  </div>
+</header>
+
+<section class="sec" id="how">
+  <div class="wrap">
+    <div class="sec-head">
+      <h2>Three steps, <em>zero signup</em></h2>
+      <p>No account. No API key. No subscription. It just runs.</p>
+    </div>
+    <div class="grid3">
+      <div class="card">
+        <span class="num">STEP 01</span>
+        <h3>One-click install</h3>
+        <p>Install via the DSH plugin or MeshMoe Desktop. MeshMoe-4B (just 2.7&nbsp;GB) downloads and configures itself. Works on office laptops and old machines with no discrete GPU.</p>
+      </div>
+      <div class="card">
+        <span class="num">STEP 02</span>
+        <h3>Free local AI</h3>
+        <p>Chat, write code, run agent tasks — all inference happens on your own machine. Your data never leaves. Unlimited and free, forever, because it costs us nothing and you everything-but-nothing.</p>
+      </div>
+      <div class="card">
+        <span class="num">STEP 03</span>
+        <h3>Burn Joules when idle</h3>
+        <p>When your computer is idle, the node picks up community tasks and runs AI for someone else. Every completed job adds +N Joules to your name — real energy, honestly measured: J = power × time.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="sec" id="model">
+  <div class="wrap">
+    <div class="sec-head">
+      <h2>MeshMoe-4B: <em>small model, expert-grade tool calling</em></h2>
+      <p>Measured on an RTX 3050 laptop in real agent sessions. Not a lab leaderboard.</p>
+    </div>
+    <div class="stats">
+      <div class="stat"><b>95.8%</b><span>Function-call accuracy<br>(24 cases, incl. 8 adversarial)</span></div>
+      <div class="stat"><b>45 t/s</b><span>Generation speed<br>(8 GB VRAM laptop)</span></div>
+      <div class="stat"><b>2.7 GB</b><span>Install size<br>(Q4_K_M, runs CPU-only)</span></div>
+      <div class="stat"><b>32K</b><span>Context window<br>(verified on real agent runs)</span></div>
+    </div>
+    <div class="grid3" style="margin-top:26px">
+      <div class="card"><h3>Apache 2.0</h3><p>Deep-fine-tuned from open Qwen3.5 / NeoHorse-1 lineage. Fully self-controlled license — commercial use and redistribution allowed, no strings.</p></div>
+      <div class="card"><h3>Agent-native</h3><p>Tool calling is its home turf. Verified end-to-end: creating files, querying data, chaining tool calls. Not a demo toy.</p></div>
+      <div class="card"><h3>It learns from you</h3><p>Real task trajectories from the mesh flow back into the next generation. Get a trajectory selected for training and your name enters the acknowledgments.</p></div>
+    </div>
+  </div>
+</section>
+
+<section class="sec" id="honor">
+  <div class="wrap">
+    <div class="sec-head">
+      <h2>The honor system: <em>geeks speak this language</em></h2>
+      <p>We don't pay money. BOINC lit up 3 million machines with pure honor. We inherited that playbook.</p>
+    </div>
+    <div class="grid4">
+      <div class="card"><span class="num">UNIT</span><h3>Joule</h3><p>Every inference is a real energy contribution. Append-only, non-consumable, non-transferable. Cheating? Faking physical work is far more expensive than faking points.</p></div>
+      <div class="card"><span class="num">IDENTITY</span><h3>Five ranks</h3><p>Contributor → Maker → Maintainer → Core → Legend (only 100 seats, ever). Straight from open-source culture.</p></div>
+      <div class="card"><span class="num">SOCIAL</span><h3>Teams &amp; weekly battles</h3><p>Form a team, fight weekly leaderboards, take over city rankings. Recruiting one team = recruiting dozens. Leaderboards are the most honest growth engine.</p></div>
+      <div class="card"><span class="num">CREDIT</span><h3>Your name in training</h3><p>Your trajectory selected to train MeshMoe-5? Your name goes in the acknowledgments — the highest recognition this community can give.</p></div>
+    </div>
+    <div class="badge-genesis">
+      <div class="medal">🏆</div>
+      <div>
+        <h3 style="margin-bottom:8px">Genesis Nodes · First 1,000</h3>
+        <p style="color:var(--muted);font-size:14px">Permanent node number + exclusive badge. Community fossils — never re-issued. The founding team's own node numbers and Joule counts are displayed right here on this site. We lead by example.</p>
+      </div>
+    </div>
+    <div class="idcard">
+      <div class="row"><span class="k">NODE</span><span class="v">#0817 · Genesis</span></div>
+      <div class="row"><span class="k">RANK</span><span class="v">Maintainer</span></div>
+      <div class="row"><span class="k">TASKS</span><span class="v">12,480 inferences</span></div>
+      <div class="row"><span class="k">JOULE</span><span class="v">892,301 J burned</span></div>
+      <div class="row"><span class="k">EQUIV</span><span class="v">≈ 41 hours of donated compute</span></div>
+    </div>
+  </div>
+</section>
+
+<section class="sec" id="roadmap">
+  <div class="wrap">
+    <div class="sec-head">
+      <h2>Roadmap: <em>the million-expert phase change</em></h2>
+      <p>Three stages. Each one stands on the shoulders of the last.</p>
+    </div>
+    <div class="roadmap">
+      <div class="phase now">
+        <div class="dot">1</div>
+        <div class="body">
+          <h3>Geek community <small>0 → 10K nodes · in progress</small></h3>
+          <p>DSH plugin launch, Genesis Node program, MeshMoe Desktop packaging. One shared base model for the whole network — build the community first.</p>
+        </div>
+      </div>
+      <div class="phase">
+        <div class="dot">2</div>
+        <div class="body">
+          <h3>Community expansion <small>10K → 300K nodes</small></h3>
+          <p>Team battles go live. Expert routing (code tasks go to code experts). Real trajectories flow back to train MeshMoe-4B v2 — the community starts feeding its own model.</p>
+        </div>
+      </div>
+      <div class="phase">
+        <div class="dot">3</div>
+        <div class="body">
+          <h3>Capability phase change <small>300K → 1M+ nodes</small></h3>
+          <p>Verifiable-reward RL loop closes. Narrow-domain specialists beat general flagship models. One command upgrades the entire network. A million computers, one self-improving brain.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="sec faq" id="faq">
+  <div class="wrap">
+    <div class="sec-head"><h2>FAQ</h2></div>
+    <details><summary>Is it really free? How do you survive?</summary><p>Local inference is free forever — it runs on your own machine and costs us nothing. Idle compute for community tasks is donated voluntarily (in exchange for Joules). Future revenue comes from enterprise APIs and optional paid capacity for users without capable hardware — community members never pay. We don't sell data, and honor is never for sale.</p></details>
+    <details><summary>Can Joules be exchanged for money?</summary><p>No. Never. Joules are honor, not currency — non-consumable, non-transferable, non-exchangeable. That's exactly why they stay clean: no financial properties, no arbitrage, no incentive to farm.</p></details>
+    <details><summary>Will you steal my data?</summary><p>Local inference data never leaves your machine — 100%. Task content from mesh jobs lives only in the task channel. Training-data contribution is opt-in (off by default), revocable anytime, with fully published sanitization standards.</p></details>
+    <details><summary>My machine is old. Can I still join?</summary><p>Yes. MeshMoe-4B runs CPU-only with 4 GB RAM — slower, but you still burn Joules. Got a 24 GB GPU? Install the tower tier (Qwen3.8-27B), take harder tasks, burn faster.</p></details>
+    <details><summary>Why "MeshMoe"?</summary><p>Mesh + MoE (Mixture of Experts). In a model-level MoE, a router sends each token to the most qualified expert sub-network. MeshMoe scales that to the network level — the router sends each task to the most qualified machine. A million computers, one Mixture-of-Experts brain.</p></details>
+  </div>
+</section>
+
+<section class="final-cta" id="join">
+  <div class="wrap">
+    <h2>Number <em>#0001</em> is taken.<br>Is the next one yours?</h2>
+    <p style="color:var(--muted);margin-bottom:36px">Genesis numbers are never re-issued. Install MeshMoe and burn your first Joule.</p>
+    <a class="cta-btn" href="https://github.com/" style="font-size:16px;padding:14px 34px">Claim your Genesis Node</a>
+    <a class="cta-ghost" href="/zh/">中文版</a>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap">
+    <span>© 2026 MeshMoe · Turn your idle compute into community memory</span>
+    <span>
+      <a href="/privacy.html">Privacy</a> · <a href="/terms.html">Terms</a> · <a href="/status">Network Status</a> · <a href="/zh/">中文</a>
+    </span>
+  </div>
+</footer>
+
+<script>
+document.querySelectorAll('a[href^="#"]').forEach(a=>{
+  a.addEventListener('click',e=>{
+    const t=document.querySelector(a.getAttribute('href'));
+    if(t){e.preventDefault();t.scrollIntoView({behavior:'smooth'})}
+  });
+});
+</script>
+</body>
+</html>

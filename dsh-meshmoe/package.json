@@ -1,0 +1,32 @@
+{
+  "name": "dsh-meshmoe",
+  "version": "1.0.0",
+  "description": "MeshMoe for DeepSeek Harness: one-click local MeshMoe-4B model + mesh node membership, zero registration",
+  "main": "lib/index.js",
+  "keywords": [
+    "dsh",
+    "dsh-plugin",
+    "deepseek-harness",
+    "meshmoe",
+    "local-ai",
+    "edge-computing",
+    "cordis"
+  ],
+  "dsh": {
+    "bundle": {
+      "patch": "./cordis.patch.yml"
+    },
+    "compatibility": {
+      "dshReleases": {
+        "0.2.2-rc.1": "compatible"
+      }
+    }
+  },
+  "peerDependencies": {
+    "@deepseek-ai/cordis": "^4.0.4"
+  },
+  "dependencies": {
+    "yaml": "^2.9.1"
+  },
+  "license": "Apache-2.0"
+}

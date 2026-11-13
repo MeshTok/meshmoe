@@ -1,0 +1,6 @@
+{
+  "label": "Q5_K_M",
+  "ts": "2026-11-13 10:45 (manual save: JSON write failed on first run due to path bug; results reconstructed from console output)",
+  "A": {"ok": 23, "total": 24, "acc": 95.8, "note": "唯一FAIL: A15 出差咨询误调 get_weather (边界负例)"},
+  "B": {"ok": 3, "total": 6, "acc": 50.0, "note": "B2 查库后未调 convert_currency(心算了); B4 未用计算器; B5 未调 convert_currency(心算了)"}
+}

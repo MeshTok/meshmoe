@@ -1,0 +1,25 @@
+# Runtime & models (never commit weights)
+dsh-integration/runtime/
+**/*.gguf
+**/llama-bin/
+
+# node/ working dir: only source is tracked
+node/*
+!node/edge_node.py
+!node/requirements.txt
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+
+# Node
+node_modules/
+package-lock.json
+
+# Local state
+*.local.patch.yml
+meshmoe-merged.patch.yml
+.wiremock/
+*_status.txt
+*.bak

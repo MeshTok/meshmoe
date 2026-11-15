@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Claim Your Node — MeshMoe Honor Registry</title>
+<meta name="description" content="Bind your MeshMoe node to your account. Joules you already burned follow you — honor is never subtracted.">
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='12' fill='%230a0e0a'/%3E%3Ccircle cx='32' cy='32' r='6' fill='%2300ff9c'/%3E%3Ccircle cx='14' cy='14' r='3.5' fill='%2300ff9c'/%3E%3Ccircle cx='50' cy='14' r='3.5' fill='%2300ff9c'/%3E%3Ccircle cx='14' cy='50' r='3.5' fill='%2300ff9c'/%3E%3Ccircle cx='50' cy='50' r='3.5' fill='%2300ff9c'/%3E%3C/svg%3E">
+<style>
+:root{
+  --bg:#0a0e0a; --bg2:#0e150f; --panel:#111a12; --line:#1d2b20;
+  --green:#00ff9c; --green-dim:#00c978; --text:#e8f5ee; --muted:#8fa89a;
+  --amber:#ffc861; --red:#ff7a7a;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:var(--bg);color:var(--text);font-family:-apple-system,"Segoe UI",Inter,Roboto,sans-serif;line-height:1.7}
+a{color:var(--green);text-decoration:none}
+.wrap{max-width:860px;margin:0 auto;padding:0 24px}
+nav{position:sticky;top:0;z-index:50;background:rgba(10,14,10,.85);backdrop-filter:blur(12px);border-bottom:1px solid var(--line)}
+nav .wrap{max-width:1080px;display:flex;align-items:center;justify-content:space-between;height:64px}
+.logo{display:flex;align-items:center;gap:10px;font-weight:700;font-size:18px;color:var(--text)}
+.logo svg{width:28px;height:28px}
+.nav-links{display:flex;gap:26px;font-size:14px}
+.nav-links a{color:var(--muted)}
+.nav-links a:hover{color:var(--green)}
+header{padding:64px 0 20px;text-align:center}
+h1{font-size:34px;font-weight:800;line-height:1.3;letter-spacing:-.4px}
+h1 em{font-style:normal;color:var(--green)}
+.sub{color:var(--muted);font-size:16px;max-width:600px;margin:16px auto 0}
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:28px;margin:26px 0}
+.panel h2{font-size:18px;margin-bottom:6px}
+.panel .hint{color:var(--muted);font-size:13px;margin-bottom:18px}
+label{display:block;font-size:13px;color:var(--muted);margin:16px 0 6px;letter-spacing:.3px}
+input{width:100%;background:var(--bg2);border:1px solid var(--line);border-radius:10px;padding:12px 14px;color:var(--text);font-size:14px;font-family:ui-monospace,Consolas,monospace;outline:none;transition:.2s}
+input:focus{border-color:var(--green-dim);box-shadow:0 0 0 3px rgba(0,255,156,.08)}
+button{background:var(--green);color:#04170d;font-weight:700;border:none;border-radius:10px;padding:13px 26px;font-size:15px;cursor:pointer;margin-top:22px;transition:.2s;font-family:inherit}
+button:hover{transform:translateY(-2px);box-shadow:0 8px 26px rgba(0,255,156,.22)}
+button:disabled{opacity:.5;cursor:not-allowed;transform:none;box-shadow:none}
+button.ghost{background:transparent;border:1px solid var(--green-dim);color:var(--green);margin-left:10px}
+.msg{margin-top:16px;font-size:14px;padding:12px 16px;border-radius:10px;display:none}
+.msg.ok{display:block;background:rgba(0,255,156,.07);border:1px solid rgba(0,255,156,.35);color:var(--green)}
+.msg.err{display:block;background:rgba(255,122,122,.07);border:1px solid rgba(255,122,122,.35);color:var(--red)}
+.idcard{background:var(--bg2);border:1px solid var(--green-dim);border-radius:14px;padding:22px 26px;font-family:ui-monospace,Consolas,monospace;font-size:14px;margin-top:20px;display:none}
+.idcard.show{display:block}
+.idcard .row{display:flex;justify-content:space-between;gap:16px;padding:8px 0;border-bottom:1px dashed var(--line)}
+.idcard .row:last-child{border:none}
+.idcard .k{color:var(--muted);flex-shrink:0}
+.idcard .v{color:var(--green);text-align:right;word-break:break-all}
+.idcard .v.plain{color:var(--text)}
+code{background:var(--bg2);border:1px solid var(--line);border-radius:6px;padding:2px 7px;font-family:ui-monospace,Consolas,monospace;font-size:13px;color:var(--green)}
+ol{color:var(--muted);font-size:14px;padding-left:20px}
+ol li{margin-bottom:10px}
+ol li b{color:var(--text);font-weight:600}
+.note{border-left:2px solid var(--amber);padding:12px 18px;background:rgba(255,200,97,.05);border-radius:0 10px 10px 0;color:var(--muted);font-size:13.5px;margin-top:22px}
+footer{border-top:1px solid var(--line);padding:36px 0;color:var(--muted);font-size:13px;text-align:center;margin-top:60px}
+.spin{display:inline-block;width:13px;height:13px;border:2px solid rgba(4,23,13,.3);border-top-color:#04170d;border-radius:50%;animation:sp .7s linear infinite;vertical-align:-2px;margin-right:8px}
+@keyframes sp{to{transform:rotate(360deg)}}
+@media(max-width:760px){h1{font-size:26px}.nav-links{display:none}.panel{padding:20px}button.ghost{margin:12px 0 0 0;width:100%}button{width:100%}}
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="wrap">
+    <a class="logo" href="/">
+      <svg viewBox="0 0 64 64"><rect width="64" height="64" rx="12" fill="#111a12"/><circle cx="32" cy="32" r="6" fill="#00ff9c"/><circle cx="14" cy="14" r="3.5" fill="#00ff9c"/><circle cx="50" cy="14" r="3.5" fill="#00ff9c"/><circle cx="14" cy="50" r="3.5" fill="#00ff9c"/><circle cx="50" cy="50" r="3.5" fill="#00ff9c"/><line x1="32" y1="32" x2="14" y2="14" stroke="#00ff9c" stroke-width="1.6" opacity=".7"/><line x1="32" y1="32" x2="50" y2="14" stroke="#00ff9c" stroke-width="1.6" opacity=".7"/><line x1="32" y1="32" x2="14" y2="50" stroke="#00ff9c" stroke-width="1.6" opacity=".7"/><line x1="32" y1="32" x2="50" y2="50" stroke="#00ff9c" stroke-width="1.6" opacity=".7"/></svg>
+      MeshMoe
+    </a>
+    <div class="nav-links">
+      <a href="/#how">How It Works</a>
+      <a href="/#honor">Honor System</a>
+      <a href="/claim/">Claim</a>
+      <a href="/#faq">FAQ</a>
+    </div>
+  </div>
+</nav>
+
+<header>
+  <div class="wrap">
+    <h1>Claim your <em>node identity</em></h1>
+    <p class="sub">Your machine already has a node id and a token. Bind it to your account and every Joule you have burned — and will burn — counts as yours. Honor is never subtracted, never transferred.</p>
+  </div>
+</header>
+
+<div class="wrap">
+
+  <!-- STEP 1: lookup -->
+  <div class="panel">
+    <h2>1 · Look up a node</h2>
+    <p class="hint">Anyone can inspect any node's public honor card. No login, no token.</p>
+    <label for="lookupId">NODE ID</label>
+    <input id="lookupId" placeholder="e.g. meshmoe-win-dev" autocomplete="off" spellcheck="false">
+    <button id="lookupBtn">Show honor card</button>
+    <div id="lookupMsg" class="msg"></div>
+    <div id="lookupCard" class="idcard"></div>
+  </div>
+
+  <!-- STEP 2: claim -->
+  <div class="panel">
+    <h2>2 · Bind it to your account</h2>
+    <p class="hint">The token proves the node is yours — it is issued by the node itself on first launch and stored only as a hash on our side.</p>
+    <label for="claimNode">NODE ID</label>
+    <input id="claimNode" placeholder="e.g. meshmoe-win-dev" autocomplete="off" spellcheck="false">
+    <label for="claimToken">NODE TOKEN</label>
+    <input id="claimToken" placeholder="40-char token from node.json" autocomplete="off" spellcheck="false">
+    <label for="claimUser">ACCOUNT (email)</label>
+    <input id="claimUser" placeholder="you@example.com" autocomplete="email" spellcheck="false">
+    <button id="claimBtn">Claim this node</button>
+    <button id="fillBtn" class="ghost">Autofill from last lookup</button>
+    <div id="claimMsg" class="msg"></div>
+    <div id="claimCard" class="idcard"></div>
+  </div>
+
+  <!-- where to find token -->
+  <div class="panel">
+    <h2>Where is my node token?</h2>
+    <p class="hint">The installer creates it automatically the first time the node starts.</p>
+    <ol>
+      <li><b>Windows:</b> open <code>%USERPROFILE%\.meshmoe\node.json</code> — look for <code>node_token</code>.</li>
+      <li><b>macOS / Linux:</b> <code>cat ~/.meshmoe/node.json</code></li>
+      <li><b>Docker / headless:</b> the same file inside the container, or the path printed at startup.</li>
+      <li>Lost the file? Restart the node — it re-registers with the same id and prints a fresh token only if the old one cannot be verified.</li>
+    </ol>
+    <div class="note">
+      Treat the token like a password for your node. Anyone holding it can claim the node's honor.
+      Joules are <b>not</b> money and cannot be transferred or sold — binding only decides whose name is on the record.
+    </div>
+  </div>
+
+</div>
+
+<footer>
+  <div class="wrap">
+    © 2026 MeshMoe · <a href="/">Home</a> · <a href="/#honor">Honor System</a> · <a href="/zh/">中文</a>
+  </div>
+</footer>
+
+<script>
+const API = "https://api.meshmoe.com/credits";
+
+function setMsg(el, kind, text){
+  el.className = "msg " + kind;
+  el.textContent = text;
+}
+function clearMsg(el){ el.className = "msg"; el.textContent = ""; }
+
+function card(el, rows){
+  el.innerHTML = rows.map(([k,v,plain]) =>
+    `<div class="row"><span class="k">${k}</span><span class="v${plain ? " plain" : ""}">${v}</span></div>`
+  ).join("");
+  el.classList.add("show");
+}
+
+function fmtJ(n){
+  n = Number(n) || 0;
+  if(n >= 1e6) return (n/1e6).toFixed(2) + " MJ";
+  if(n >= 1e3) return (n/1e3).toFixed(2) + " kJ";
+  return n + " J";
+}
+
+async function lookup(nodeId){
+  const res = await fetch(`${API}/node/${encodeURIComponent(nodeId)}`);
+  const data = await res.json();
+  if(!res.ok || data.error) throw new Error(data.error || ("HTTP " + res.status));
+  return data;
+}
+
+const lookupBtn = document.getElementById("lookupBtn");
+const lookupMsg = document.getElementById("lookupMsg");
+const lookupCard = document.getElementById("lookupCard");
+const lookupId = document.getElementById("lookupId");
+
+lookupBtn.addEventListener("click", async () => {
+  const id = lookupId.value.trim();
+  clearMsg(lookupMsg);
+  lookupCard.classList.remove("show");
+  if(!id){ setMsg(lookupMsg, "err", "Enter a node id first."); return; }
+  lookupBtn.disabled = true;
+  lookupBtn.innerHTML = '<span class="spin"></span>Looking up…';
+  try{
+    const d = await lookup(id);
+    setMsg(lookupMsg, "ok", `Node found — ${d.owned ? "already bound to an account" : "unclaimed"}.`);
+    card(lookupCard, [
+      ["NODE", d.node_id, true],
+      ["JOULE", fmtJ(d.joules) + `  (${Number(d.joules)||0} J)`],
+      ["TASKS", Number(d.tasks) || 0, true],
+      ["TOKENS", Number(d.tokens) || 0, true],
+      ["GPU", d.gpu_name || "unknown", true],
+      ["EXPERT", d.expert_type || "general", true],
+      ["OWNED", d.owned ? "yes" : "no — claimable"],
+    ]);
+    document.getElementById("claimNode").value = d.node_id;
+  }catch(e){
+    setMsg(lookupMsg, "err", /404|unknown/i.test(e.message) ? "No such node. Check the id — it is the name printed at startup." : e.message);
+  }finally{
+    lookupBtn.disabled = false;
+    lookupBtn.textContent = "Show honor card";
+  }
+});
+
+const claimBtn = document.getElementById("claimBtn");
+const claimMsg = document.getElementById("claimMsg");
+const claimCard = document.getElementById("claimCard");
+
+claimBtn.addEventListener("click", async () => {
+  const node_id = document.getElementById("claimNode").value.trim();
+  const node_token = document.getElementById("claimToken").value.trim();
+  const username = document.getElementById("claimUser").value.trim();
+  clearMsg(claimMsg);
+  claimCard.classList.remove("show");
+  if(!node_id || !node_token || !username){
+    setMsg(claimMsg, "err", "Node id, token and account are all required.");
+    return;
+  }
+  claimBtn.disabled = true;
+  claimBtn.innerHTML = '<span class="spin"></span>Claiming…';
+  try{
+    const res = await fetch(`${API}/claim_node`, {
+      method: "POST",
+      headers: {"Content-Type": "application/json"},
+      body: JSON.stringify({node_id, node_token, username})
+    });
+    const data = await res.json();
+    if(!res.ok || data.error) throw new Error(data.error || ("HTTP " + res.status));
+    setMsg(claimMsg, "ok", `Done — node ${data.node_id} is now bound to ${data.owner}.`);
+    const d = await lookup(node_id);
+    card(claimCard, [
+      ["NODE", d.node_id, true],
+      ["OWNER", data.owner],
+      ["JOULE CREDITED", fmtJ(d.joules)],
+      ["OWNER JOULE", fmtJ(d.owner_joules)],
+      ["STATUS", "owned"],
+    ]);
+    document.getElementById("lookupId").value = node_id;
+  }catch(e){
+    const m = e.message || "";
+    let hint = m;
+    if(/already owned/i.test(m)) hint = "This node is already bound to an account. Honor cannot be transferred.";
+    else if(/invalid node token/i.test(m)) hint = "That token does not match this node. Copy node_token exactly from node.json.";
+    else if(/unknown node_id/i.test(m)) hint = "No such node — start the node once so it registers, then retry.";
+    setMsg(claimMsg, "err", hint);
+  }finally{
+    claimBtn.disabled = false;
+    claimBtn.textContent = "Claim this node";
+  }
+});
+
+document.getElementById("fillBtn").addEventListener("click", () => {
+  const id = lookupId.value.trim() || document.getElementById("claimNode").value.trim();
+  if(id) document.getElementById("claimNode").value = id;
+});
+</script>
+</body>
+</html>

@@ -516,7 +516,8 @@ class CreditHandler(BaseHTTPRequestHandler):
                 if not node_id or not username:
                     self._send({"error": "node_id and username required"}, 400)
                     return
-                user = get_user(conn, username)
+                # 注：账号必须在 node/token 校验通过之后才创建。否则任何人用任意邮箱
+                # POST 一次不存在的 node_id，就能凭空建出用户并拿到 500 初始 credits。
                 with conn.cursor() as cur:
                     cur.execute("SELECT node_token_hash, owner_user_id FROM nodes WHERE peer_id = %s FOR UPDATE", (node_id,))
                     row = cur.fetchone()
@@ -532,6 +533,8 @@ class CreditHandler(BaseHTTPRequestHandler):
                         conn.rollback()
                         self._send({"error": "invalid node token"}, 403)
                         return
+                    # 校验全部通过，这才建号（幂等：已存在则复用）
+                    user = get_user(conn, username)
                     cur.execute("UPDATE nodes SET owner_user_id = %s WHERE peer_id = %s", (user["id"], node_id))
                     cur.execute(
                         "UPDATE joule_ledger SET owner_user_id = %s WHERE node_id = %s AND owner_user_id IS NULL",

@@ -12,7 +12,7 @@ v3 变更:
 import json, time, sys, os, socket, threading, signal, platform
 from http.server import HTTPServer, BaseHTTPRequestHandler
 from urllib.request import Request, urlopen
-from urllib.error import URLError
+from urllib.error import URLError, HTTPError
 
 # 🔑 加载部署 .env(2026-07-20):MESHMOE_INTERNAL_KEY 用于 verified 注册。
 # 之前 edge 进程没读 .env → 注册发空 key → verified 恒 False(L2/L3 白名单失效实锤)。
@@ -207,6 +207,34 @@ def detect_hardware():
 
 
 # ============ 模型下载 ============
+def _usable_model_file(path):
+    """本地已有可用模型：存在且 >100MB 视为完整（gguf 头校验可选，这里只做尺寸兜底）。"""
+    try:
+        return bool(path) and os.path.isfile(path) and os.path.getsize(path) > 100_000_000
+    except OSError:
+        return False
+
+
+def _find_local_model(gguf_file, model_dir):
+    """复用本机已下载好的模型，避免重复拉 2.7GB。
+    优先级：MESHMOE_MODEL_FILE 显式指定 → 模型目录 → 常见旁路目录。
+    """
+    explicit = (os.getenv("MESHMOE_MODEL_FILE") or "").strip()
+    cands = []
+    if explicit:
+        cands.append(explicit)
+    cands.append(os.path.join(model_dir, gguf_file))
+    base = os.path.dirname(os.path.abspath(__file__))
+    for rel in ("../eval/models", "../runtime/models", "../client-dsh/runtime/models",
+                "~/models", "~/.meshmoe/models"):
+        cands.append(os.path.join(base, rel, gguf_file) if not rel.startswith("~")
+                     else os.path.join(os.path.expanduser(rel), gguf_file))
+    for c in cands:
+        if _usable_model_file(c):
+            return c
+    return None
+
+
 def download_model(model_name, model_dir):
     """从ModelScope下载模型，失败则尝试HuggingFace"""
     cfg = MODEL_CATALOG[model_name]
@@ -219,6 +247,14 @@ def download_model(model_name, model_dir):
 
     os.makedirs(model_dir, exist_ok=True)
 
+    # 本机已有同款模型（显式路径 / 旁路目录）→ 直接用，不重复下载
+    found = _find_local_model(gguf_file, model_dir)
+    if found:
+        print(f"[Download] Reuse local model: {found}")
+        if os.path.abspath(found) != os.path.abspath(model_path):
+            print(f"[Download] Linked as: {model_path}")
+        return found
+
     # 各源：ModelScope(优先,国内) → HF-Mirror(国内) → HuggingFace 直连(海外)
     # 注意 ModelScope 默认分支是 master，HF 是 main；分别构造。
     org = cfg["modelscope_org"]
@@ -230,6 +266,16 @@ def download_model(model_name, model_dir):
 
     tmp_path = model_path + ".tmp"
     MAX_RETRIES = 4  # 每个源对瞬时错误(TLS/断流)重试次数
+
+    def _drop_tmp(reason):
+        """丢弃坏分片：416/尺寸超限/切换源都意味着 .tmp 不可信，续传只会一直失败。"""
+        try:
+            if os.path.exists(tmp_path):
+                sz = os.path.getsize(tmp_path)
+                os.remove(tmp_path)
+                print(f"[Download] Discarded partial ({sz} bytes): {reason}")
+        except OSError:
+            pass
 
     def _download(url, label):
         """单源下载：支持 Range 断点续传 + 瞬时错误重试。失败返回 False。"""
@@ -272,6 +318,16 @@ def download_model(model_name, model_dir):
                 os.replace(tmp_path, model_path)
                 print(f"[Download] Complete via {label}: {model_path}")
                 return True
+            except HTTPError as e:
+                # 416 = Range 起点超出远端文件长度 → 本地 .tmp 是坏的（超出/来源不一致）
+                if e.code == 416:
+                    _drop_tmp("HTTP 416, partial beyond remote EOF")
+                    if attempt == 1:
+                        continue  # 丢掉脏分片后立刻重试一次全量
+                    time.sleep(1)
+                    continue
+                print(f"\n[Download] {label} attempt {attempt}/{MAX_RETRIES} failed: {e}")
+                time.sleep(2 * attempt)
             except Exception as e:
                 print(f"\n[Download] {label} attempt {attempt}/{MAX_RETRIES} failed: {e}")
                 # 保留 .tmp 以便续传，不删除
@@ -283,13 +339,13 @@ def download_model(model_name, model_dir):
         if _download(url, label):
             return model_path
         print(f"[Download] {label} exhausted, trying next source...")
+        # 换源必须重置分片：不同镜像的字节流不能拼在一起
+        _drop_tmp("switching source")
 
-    # 清理失败的 .tmp
-    if os.path.exists(tmp_path):
-        os.remove(tmp_path)
-    print(f"[Download] All sources failed. Manual download:")
+    print(f"[Download] All sources failed. Resume manually:")
     print(f"  curl -L -C - -o {model_path} {ms_url}")
     print(f"  Or: curl -L -C - -o {model_path} {hf_url}")
+    print(f"  Or: set MESHMOE_MODEL_FILE=<existing .gguf path>")
     return None
 
 
@@ -1076,6 +1132,96 @@ def worker_loop():
         time.sleep(1)
 
 
+# ============ 外部运行时兜底：拉起 llama-server 子进程 ============
+# 为什么需要：llama-cpp-python 在 Windows 上经常装不上(CUDA wheel 缺 cudart/cublas)
+# 或没装。此时不阻塞节点上线 —— 用官方 llama-server.exe 起一个 OpenAI 兼容服务，
+# 节点退化为 connector 模式指向它。这也和 DSH 客户端(hhl 运行时)架构一致。
+LLAMA_SERVER_RELATIVE = [
+    "llama-bin/llama-server.exe",
+    "llama-bin/llama-server",
+    "../runtime/llama-bin/llama-server.exe",
+    "../runtime/llama-bin/llama-server",
+    "../dsh-integration/runtime/llama-bin/llama-server.exe",
+    "../dsh-integration/runtime/llama-bin/llama-server",
+    "../eval/tools/llama-bin/llama-server.exe",
+    "../eval/tools/llama-bin/llama-server",
+]
+
+
+def find_llama_server():
+    """定位 llama-server 可执行文件：MESHMOE_LLAMA_BIN 优先，其次仓库内已知位置，最后 PATH。"""
+    explicit = (os.getenv("MESHMOE_LLAMA_BIN") or "").strip()
+    if explicit and os.path.isfile(explicit):
+        return explicit
+    base = os.path.dirname(os.path.abspath(__file__))
+    for rel in LLAMA_SERVER_RELATIVE:
+        cand = os.path.normpath(os.path.join(base, rel))
+        if os.path.isfile(cand):
+            return cand
+    import shutil as _sh
+    return _sh.which("llama-server")
+
+
+def _wait_http_ok(url, timeout=240, interval=1.5):
+    deadline = time.time() + timeout
+    while time.time() < deadline:
+        try:
+            with urlopen(Request(url, headers={"User-Agent": "MeshMoE-Edge/3.0"}), timeout=3) as r:
+                if r.status == 200:
+                    return True
+        except Exception:
+            pass
+        time.sleep(interval)
+    return False
+
+
+def spawn_llama_server(model_path, port=None, ngl=None):
+    """用 llama-server.exe 加载 gguf 并对外提供 OpenAI 接口，返回 base_url；失败返回 None。
+    --jinja 是 tool-calling 的关键（agent 循环依赖它渲染 chat template 的 tools）。
+    """
+    import subprocess
+    binary = find_llama_server()
+    if not binary:
+        print("[Runtime] 未找到 llama-server 可执行文件（可设 MESHMOE_LLAMA_BIN 指定）")
+        return None
+    port = int(port or os.getenv("MESHMOE_RUNTIME_PORT", "8081"))
+    if ngl is None:
+        ngl = -1 if (os.getenv("MESHMOE_NGL") is None) else int(os.getenv("MESHMOE_NGL"))
+    base_url = f"http://127.0.0.1:{port}"
+    if _wait_http_ok(f"{base_url}/v1/models", timeout=2):
+        print(f"[Runtime] 复用已在运行的 llama-server @ {base_url}")
+        return base_url
+
+    cmd = [binary, "-m", model_path, "-c", str(N_CTX),
+           "--host", "127.0.0.1", "--port", str(port), "--jinja"]
+    if ngl != 0:
+        cmd += ["-ngl", str(ngl)]
+    threads = min(os.cpu_count() or 4, 8)
+    cmd += ["-t", str(threads)]
+    print(f"[Runtime] 拉起 llama-server: {binary}")
+    print(f"[Runtime] {' '.join(cmd)}")
+    log_path = os.path.join(MODEL_DIR, "llama-server.log")
+    try:
+        logf = open(log_path, "ab")
+        proc = subprocess.Popen(cmd, stdout=logf, stderr=subprocess.STDOUT,
+                                creationflags=getattr(subprocess, "CREATE_NO_WINDOW", 0))
+    except Exception as e:
+        print(f"[Runtime] 启动失败: {e!r}")
+        return None
+    print(f"[Runtime] PID {proc.pid}，日志 {log_path}，等待就绪(最长 240s)…")
+    if _wait_http_ok(f"{base_url}/v1/models", timeout=240):
+        print(f"[Runtime] 就绪 @ {base_url}")
+        return base_url
+    print("[Runtime] 超时未就绪，请查看日志。尝试 CPU 回退(-ngl 0)…")
+    try:
+        proc.terminate()
+    except Exception:
+        pass
+    if ngl != 0:
+        return spawn_llama_server(model_path, port=port, ngl=0)
+    return None
+
+
 def main():
     global edge, start_time
     start_time = time.time()
@@ -1177,7 +1323,22 @@ def main():
                         gpu_watts=estimate_gpu_watts(hw_info.get("gpu_name", "")))
 
     # 4. 加载（connector 模式下 load_model 只做连通性确认）
-    if not edge.load_model():
+    loaded = edge.load_model()
+    if not loaded and isinstance(edge, EdgeNode) and not MOCK_MODE and edge.model_path:
+        # 内置引擎起不来(缺 llama-cpp-python / CUDA DLL) → 拉起 llama-server 子进程顶上，
+        # 节点退化为 connector 模式。原则：宁可换引擎，也不让节点掉线。
+        print("\n[Runtime] 内置引擎不可用，改用 llama-server 子进程作为推理后端…")
+        _bu = spawn_llama_server(edge.model_path)
+        if _bu:
+            _model_id = edge.model_name
+            edge = ConnectorEdgeNode("llama-server", _bu, _model_id,
+                                     expert_type=cfg.get("expert_type", "general"),
+                                     tier=cfg.get("tier", "standard"),
+                                     gpu_watts=estimate_gpu_watts(hw_info.get("gpu_name", "")))
+            cfg = dict(cfg)
+            cfg["description"] = f"llama-server→{_model_id}"
+            loaded = edge.load_model()
+    if not loaded:
         sys.exit(1)
 
     # 5. 启动本地健康检查服务

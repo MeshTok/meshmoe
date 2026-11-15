@@ -136,7 +136,17 @@ def get_node_honor(conn, node_id):
         if row[4]:
             cur.execute("SELECT COALESCE(SUM(joules),0) FROM joule_ledger WHERE owner_user_id = %s", (row[4],))
             owner_joules = cur.fetchone()[0]
-    return {"node_id": row[0], "joules": row[1], "tasks": row[2], "tokens": row[3],
+        # nodes.total_tasks 只在 earn_credits() 路径（网关计费）里自增，
+        # router 派单的节点永远是 0 —— 荣誉卡按账本去重计数自愈。
+        ledger_tasks = 0
+        try:
+            cur.execute("SELECT COUNT(DISTINCT task_id) FROM joule_ledger "
+                        "WHERE node_id = %s AND task_id IS NOT NULL", (node_id,))
+            ledger_tasks = cur.fetchone()[0] or 0
+        except Exception:
+            pass
+        tasks = max(row[2] or 0, ledger_tasks)
+    return {"node_id": row[0], "joules": row[1], "tasks": tasks, "tokens": row[3],
             "owned": bool(row[4]), "expert_type": row[5], "gpu_name": row[6],
             "owner_joules": owner_joules}
 

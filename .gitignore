@@ -23,3 +23,6 @@ meshmoe-merged.patch.yml
 .wiremock/
 *_status.txt
 *.bak
+
+# plugin has its own repo: MeshTok/dsh-plugin-meshmoe
+dsh-meshmoe/

@@ -39,3 +39,6 @@ _installtest*/
 _splittest/
 _cpu_test.log*
 _shard_test.err
+
+_finalcheck/
+mm_isolated/

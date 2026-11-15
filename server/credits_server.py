@@ -44,6 +44,25 @@ INTERNAL_API_KEY = os.getenv("MESHMOE_INTERNAL_KEY", "meshmoe-internal-2026")
 # 倍数 = 贡献算力价值权重, earn/spend 对称
 TIER_MULTIPLIER = {0: 0.3, 1: 1, 2: 3, 3: 10, 4: 30}
 
+# Edge nodes may send tier as a word ("light"/"standard"/"heavy"/"ultra") or a number;
+# the DB column is smallint, so normalize before any SQL.
+TIER_WORDS = {"light": 1, "standard": 2, "medium": 2, "heavy": 3, "ultra": 4}
+def tier_int(value, default=1):
+    if isinstance(value, bool):
+        return default
+    if isinstance(value, int):
+        return value if 0 <= value <= 4 else default
+    if isinstance(value, float):
+        return int(value) if 0 <= value <= 4 else default
+    if isinstance(value, str):
+        s = value.strip().lower()
+        if s.isdigit():
+            n = int(s)
+            return n if 0 <= n <= 4 else default
+        return TIER_WORDS.get(s, default)
+    return default
+
+
 # ========== Joule honor system (v3) ==========
 # GPU power table (watts) — mirrors node/edge_node.py GPU_POWER_TABLE
 JOULE_POWER_WATTS = {
@@ -450,7 +469,7 @@ class CreditHandler(BaseHTTPRequestHandler):
                 node_id = body.get("node_id", username)
                 gpu_name = body.get("gpu_name", "none")
                 expert_type = body.get("expert_type", "general")
-                tier = body.get("tier", 1)
+                tier = tier_int(body.get("tier", 1))
                 provided_token = body.get("node_token", "") or \
                     (self.headers.get("X-Node-Token", "") or "")
 
@@ -541,9 +560,12 @@ class CreditHandler(BaseHTTPRequestHandler):
                     self._send({"error": "unknown node_id"}, 404)
                     return
                 if row[0] and not verify_node_token(node_id, token, row[0]):
-                    conn.rollback()
-                    self._send({"error": "invalid node token"}, 403)
-                    return
+                    # Trusted internal caller (router forwarding a verified node result,
+                    # or localhost service) may record on the node's behalf.
+                    if not self._check_internal_auth():
+                        conn.rollback()
+                        self._send({"error": "invalid node token"}, 403)
+                        return
                 accepted = record_joules(conn, node_id, joules_est, task_id=task_id,
                                          model=model, gpu_name=gpu_name,
                                          duration_ms=duration_ms)

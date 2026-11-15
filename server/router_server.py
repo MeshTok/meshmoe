@@ -1229,6 +1229,7 @@ class Handler(BaseHTTPRequestHandler):
                     hw = (scheduler.nodes.get(peer_id) or {}).get("hardware") or {}
                     self._forward_joules({
                         "node_id": peer_id,
+                        "node_token": self.headers.get("X-Node-Token", ""),
                         "joules_est": joules_est,
                         "task_id": task_id,
                         "model": data.get("model"),

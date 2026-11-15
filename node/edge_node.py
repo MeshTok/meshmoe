@@ -36,6 +36,19 @@ NODE_ID = os.getenv("MESHMOE_NODE_ID", socket.gethostname())
 # 🔑 v3 节点归属 token: 用户登录 meshmoe 账号后领取, 绑定 owner_user_id。
 # 与 X-Internal-Key (平台级防冒充, verified 标记) 职责正交, 两者都带。
 NODE_TOKEN = os.getenv("MESHMOE_NODE_TOKEN", "")
+# v3: credits 结算服务(签发/校验 node_token + 焦耳账本)。nginx /credits/ → 4005
+CREDITS_URL = os.getenv("MESHMOE_CREDITS_URL", "https://api.meshmoe.com/credits")
+# 节点状态(node_id + token)。主路径 ~/.meshmoe/node.json；不可写时依次降级，
+# 避免"~/.meshmoe 是坏符号链接/只读盘"这类装机环境导致 token 永久丢失。
+def _state_candidates():
+    home = os.path.expanduser("~")
+    cands = [os.path.join(home, ".meshmoe", "node.json")]
+    local = os.getenv("LOCALAPPDATA") or os.getenv("XDG_DATA_HOME")
+    if local:
+        cands.append(os.path.join(local, "MeshMoe", "node.json"))
+    cands.append(os.path.join(os.path.dirname(os.path.abspath(__file__)), ".meshmoe-node.json"))
+    return cands
+NODE_STATE_FILE = _state_candidates()[0]
 # 🔑 可达地址:router/其他节点直连本节点推理端点用。默认 127.0.0.1(同机部署)。
 # 远程节点(NAT 外/VPS)设成公网 IP 或域名,router 才能直连做流式/探针。
 NODE_HOST = os.getenv("MESHMOE_NODE_HOST", "127.0.0.1")
@@ -87,6 +100,22 @@ MODEL_CATALOG = {
 }
 
 
+# 词档 -> 数档（服务端 nodes.tier 是 smallint；早期版本客户端传过字符串导致 500）
+_TIER_WORDS = {"light": 1, "standard": 2, "medium": 2, "heavy": 3, "ultra": 4}
+
+def tier_int(value, default=1) -> int:
+    if isinstance(value, bool):
+        return default
+    if isinstance(value, int):
+        return value if 0 <= value <= 4 else default
+    if isinstance(value, str):
+        s = value.strip().lower()
+        if s.isdigit():
+            n = int(s)
+            return n if 0 <= n <= 4 else default
+        return _TIER_WORDS.get(s, default)
+    return default
+
 # ============ 焦耳计量 (v3) ============
 # J = 功率(W) × 时间(s)。按 GPU 名称匹配满载功耗基准; 无 GPU 用整机均值。
 # 基准表只需量级正确——荣誉计量重趋势与排名，不追求电表级精度。
@@ -121,12 +150,36 @@ def detect_hardware():
         "platform": f"{platform.system()} {platform.machine()}",
     }
 
-    # RAM（跨平台：psutil 已在 requirements.txt 中）
+    # RAM（跨平台：优先 psutil；无 psutil 时按系统 API 兜底）
     try:
         import psutil
         info["ram_gb"] = psutil.virtual_memory().total // 1073741824
     except Exception:
-        pass
+        try:
+            if platform.system() == "Windows":
+                import ctypes
+
+                class MEMORYSTATUSEX(ctypes.Structure):
+                    _fields_ = [
+                        ("dwLength", ctypes.c_ulong),
+                        ("dwMemoryLoad", ctypes.c_ulong),
+                        ("ullTotalPhys", ctypes.c_ulonglong),
+                        ("ullAvailPhys", ctypes.c_ulonglong),
+                        ("ullTotalPageFile", ctypes.c_ulonglong),
+                        ("ullAvailPageFile", ctypes.c_ulonglong),
+                        ("ullTotalVirtual", ctypes.c_ulonglong),
+                        ("ullAvailVirtual", ctypes.c_ulonglong),
+                        ("ullAvailExtendedVirtual", ctypes.c_ulonglong),
+                    ]
+
+                stat = MEMORYSTATUSEX()
+                stat.dwLength = ctypes.sizeof(MEMORYSTATUSEX)
+                if ctypes.windll.kernel32.GlobalMemoryStatusEx(ctypes.byref(stat)):
+                    info["ram_gb"] = stat.ullTotalPhys // 1073741824
+            else:
+                info["ram_gb"] = os.sysconf("SC_PAGE_SIZE") * os.sysconf("SC_PHYS_PAGES") // 1073741824
+        except Exception:
+            pass
 
     # GPU
     try:
@@ -243,6 +296,7 @@ def download_model(model_name, model_dir):
 # ============ 本地服务自动发现（兼容性：用户已有的 Ollama/LM Studio/llama-server… 都能当节点） ============
 # 任何版本、任何后端，只要会说 OpenAI 协议就被发现 —— 不强制捆绑自己的 llama-cpp-python。
 LOCAL_SERVER_PROBES = [
+    ("MeshMoe-4B",     "http://127.0.0.1:8081"),     # 客户端自带运行时默认端口
     ("Ollama",         "http://127.0.0.1:11434"),   # Ollama 原生 API，也兼容 /v1
     ("LM-Studio",      "http://127.0.0.1:1234"),
     ("llama-server",   "http://127.0.0.1:8080"),
@@ -255,14 +309,17 @@ LOCAL_SERVER_PROBES = [
 ]
 
 
-def discover_local_servers(timeout=2):
+def discover_local_servers(timeout=0.8):
     """扫描本机已有的 OpenAI 兼容推理服务，返回 [(name, base_url, [model_ids...])]。
-    兼容性优先：不挑版本、不挑后端，能回 /v1/models 或 Ollama /api/tags 即被发现。"""
-    found = []
-    for name, base in LOCAL_SERVER_PROBES:
+    兼容性优先：不挑版本、不挑后端，能回 /v1/models 或 Ollama /api/tags 即被发现。
+    并行探测：串行最坏要 30s+，会让客户端启动像卡死。"""
+    from concurrent.futures import ThreadPoolExecutor
+
+    def _probe_base(item):
+        name, base = item
         for probe in (f"{base}/v1/models", f"{base}/api/tags"):  # Ollama 用 /api/tags
             try:
-                req = Request(probe, headers={"User-Agent": "MeshMoE-Edge/2.0"})
+                req = Request(probe, headers={"User-Agent": "MeshMoE-Edge/3.0"})
                 with urlopen(req, timeout=timeout) as resp:
                     if resp.status != 200:
                         continue
@@ -273,10 +330,19 @@ def discover_local_servers(timeout=2):
                         mid = m.get("id") or m.get("name") or m.get("model")
                         if mid:
                             models.append(mid)
-                found.append((name, base, models))
-                break  # 该 base 已通，不再试第二个 probe
+                return (name, base, models)
             except Exception:
                 continue
+        return None
+
+    found = []
+    with ThreadPoolExecutor(max_workers=len(LOCAL_SERVER_PROBES) or 1) as pool:
+        for res in pool.map(_probe_base, LOCAL_SERVER_PROBES):
+            if res:
+                found.append(res)
+    # 保持探测表顺序（自带的 MeshMoe-4B 排第一，优先被选用）
+    order = {base: i for i, (_, base) in enumerate(LOCAL_SERVER_PROBES)}
+    found.sort(key=lambda x: order.get(x[1], 99))
     return found
 
 
@@ -631,6 +697,68 @@ class EdgeNode:
 
 
 # ============ Router通信 ============
+def _load_node_state():
+    """读取 node.json (node_id + token 持久化)，逐个候选路径尝试"""
+    for path in _state_candidates():
+        try:
+            with open(path, "r", encoding="utf-8") as f:
+                return json.load(f)
+        except Exception:
+            continue
+    return None
+
+def _save_node_state(state):
+    """写入 node.json；主路径不可写时自动降级到 LOCALAPPDATA / 程序目录"""
+    for path in _state_candidates():
+        try:
+            os.makedirs(os.path.dirname(path), exist_ok=True)
+            with open(path, "w", encoding="utf-8") as f:
+                json.dump(state, f)
+            return path
+        except Exception:
+            continue
+    return None
+
+def self_register_token(hardware_info, expert_type, tier):
+    """v3: 无 token 时向 credits 服务匿名自助注册, 领取 node_token。
+    流程: 本地缓存 -> credits /register_node -> 持久化 token。
+    匿名入网零门槛; 用户日后在官网 claim_node 绑定账号, 焦耳随 owner 走。"""
+    global NODE_TOKEN, NODE_ID
+    if NODE_TOKEN:
+        return True
+    state = _load_node_state()
+    if state and state.get("node_token") and state.get("node_id") == NODE_ID:
+        NODE_TOKEN = state["node_token"]
+        return True
+    data = json.dumps({
+        "node_id": NODE_ID,
+        "gpu_name": hardware_info.get("gpu_name") or "none",
+        "expert_type": expert_type,
+        "tier": tier_int(tier),
+        "protocol": 3,
+    }).encode()
+    for base in [CREDITS_URL, "http://127.0.0.1:4005"]:
+        try:
+            req = Request(f"{base.rstrip('/')}/register_node", data=data, headers={
+                "Content-Type": "application/json",
+                "User-Agent": f"MeshMoE-Edge/3.0 ({NODE_ID})",
+                "X-Internal-Key": os.getenv("MESHMOE_INTERNAL_KEY", ""),
+            }, method="POST")
+            with urlopen(req, timeout=10) as resp:
+                result = json.loads(resp.read())
+            token = result.get("node_token", "")
+            if token:
+                NODE_TOKEN = token
+                saved = _save_node_state({"node_id": NODE_ID, "node_token": token,
+                                          "credits_url": base})
+                print(f"[Auth] node_token acquired via {base} (anonymous node)"
+                      + (f", saved: {saved}" if saved else " — WARNING: not persisted"))
+                return True
+        except Exception as e:
+            continue
+    print("[Auth] token issuance unavailable — running unauthenticated")
+    return False
+
 def _auth_headers():
     """v3: 所有 Router 通信统一携带两层凭证:
     - X-Node-Token: 节点归属认证 → credits 记焦耳给正确 owner (用户登录领取)
@@ -650,7 +778,7 @@ def register_with_router(hardware_info, model_name, expert_type, tier):
         "model_name": model_name,
         "host": NODE_HOST,
         "port": PORT,
-        "tier": tier,
+        "tier": tier_int(tier),
         "hardware": hardware_info,
         "protocol": 3,          # v3: 声明支持 tool-calling 透传
         "tools_supported": True,
@@ -898,6 +1026,7 @@ def worker_loop():
     # 注册
     hw_info, _ = detect_hardware()
     cfg = MODEL_CATALOG.get(edge.model_name, {})
+    self_register_token(hw_info, cfg.get("expert_type", "general"), cfg.get("tier", "light"))
     register_with_router(hw_info, edge.model_name, cfg.get("expert_type", "general"), cfg.get("tier", "light"))
 
     # 定时重新注册 (每5分钟)
@@ -973,6 +1102,21 @@ def main():
     use_connector = False
     if not MOCK_MODE and os.getenv("MESHMOE_CONNECTOR", "1") != "0":
         servers = discover_local_servers()
+        # 显式指定 MESHMOE_CONNECTOR_URL 时强制纳入（即使不在探测列表、或探测超时漏掉）
+        want = (os.getenv("MESHMOE_CONNECTOR_URL") or "").strip().rstrip("/")
+        if want and not any(bu.rstrip("/") == want for _, bu, _ in servers):
+            try:
+                req = Request(f"{want}/v1/models", headers={"User-Agent": "MeshMoE-Edge/3.0"})
+                with urlopen(req, timeout=3) as resp:
+                    data = json.loads(resp.read())
+                ms = []
+                for m in (data.get("data") or data.get("models") or []):
+                    mid = m.get("id") or m.get("name") or m.get("model")
+                    if mid:
+                        ms.append(mid)
+                servers.insert(0, ("custom", want, ms))
+            except Exception:
+                pass
         if servers:
             print(f"\n[Connector] 发现 {len(servers)} 个本地推理服务：")
             for nm, bu, ms in servers:

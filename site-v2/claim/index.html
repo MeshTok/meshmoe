@@ -93,6 +93,7 @@ footer{border-top:1px solid var(--line);padding:36px 0;color:var(--muted);font-s
     <button id="lookupBtn">Show honor card</button>
     <div id="lookupMsg" class="msg"></div>
     <div id="lookupCard" class="idcard"></div>
+    <p style="color:var(--muted);font-size:13px;margin-top:10px">Joules and task counts come from the append-only ledger. Token counts are not tracked per node, so they are intentionally not shown.</p>
   </div>
 
   <!-- STEP 2: claim -->
@@ -184,7 +185,6 @@ lookupBtn.addEventListener("click", async () => {
       ["NODE", d.node_id, true],
       ["JOULE", fmtJ(d.joules) + `  (${Number(d.joules)||0} J)`],
       ["TASKS", Number(d.tasks) || 0, true],
-      ["TOKENS", Number(d.tokens) || 0, true],
       ["GPU", d.gpu_name || "unknown", true],
       ["EXPERT", d.expert_type || "general", true],
       ["OWNED", d.owned ? "yes" : "no — claimable"],

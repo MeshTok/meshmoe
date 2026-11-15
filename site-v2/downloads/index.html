@@ -41,8 +41,9 @@ code{background:#0d150f;border:1px solid var(--line);border-radius:4px;padding:2
   <span class="k">Option A · for everyone</span>
   <h2 style="margin-top:8px">MeshMoe Node (standalone)</h2>
   <p>One user-level installer: llama.cpp runtime + MeshMoe-4B (2.7 GB) + edge node. Double-click, then start from the desktop shortcut. No admin rights, no DSH required. Works CPU-only.</p>
-  <a class="btn" href="https://github.com/MeshTok/meshmoe/releases/latest">Download the latest installer</a>
-  <a class="btn ghost" href="https://github.com/MeshTok/meshmoe">Source &amp; release notes</a>
+  <a class="btn" href="https://github.com/MeshTok/meshmoe/releases">Releases (installer + model shards)</a>
+  <a class="btn ghost" href="https://github.com/MeshTok/meshmoe/tree/main/client-dsh">Build it yourself</a>
+  <p style="margin-top:14px;font-size:14px">If release assets are not uploaded yet, the installer is reproducible in one command on Windows with NSIS 3.x + Python 3.12: <code>client-dsh\prepare-python.cmd</code> then <code>client-dsh\build-installer.cmd</code>. The two GGUF shards are produced into <code>client-dsh\dist\model-shards\</code> by the same build.</p>
   <p style="margin-top:14px;font-size:14px">After install: <code>start-node.cmd</code> → node id prints in the log → check <a href="/claim/">your honor card</a>. Optional run-at-logon: <code>enable-autostart.cmd</code> (one <code>schtasks /delete</code> undoes it).</p>
 </div>
 

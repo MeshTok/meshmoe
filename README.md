@@ -61,7 +61,7 @@ llama-server -m MeshMoe-4B-Q4_K_M.gguf --port 8081 -c 32768 --jinja --reasoning-
 set MESHMOE_NODE_TOKEN=<token-from-credits-server>
 python node/edge_node.py
 
-# 3. DSH plugin: copy dsh-meshmoe/ into your DSH plugins dir, done.
+# 3. DSH plugin: dsh plugin install dsh-plugin-meshmoe (separate repo: MeshTok/dsh-plugin-meshmoe).
 ```
 
 ## The honor ladder

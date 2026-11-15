@@ -29,3 +29,13 @@ _node_run.log
 
 # plugin has its own repo: MeshTok/dsh-plugin-meshmoe
 dsh-meshmoe/
+
+# Build artifacts (build-installer.cmd / prepare-python.cmd regenerate these)
+client-dsh/_stage/
+client-dsh/_python/
+client-dsh/dist/
+client-dsh/_installtest*/
+_installtest*/
+_splittest/
+_cpu_test.log*
+_shard_test.err

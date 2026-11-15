@@ -1,8 +1,13 @@
-# MeshMoE Node Client — Python dependencies
+# MeshMoE Node Client ? Python dependencies
 # Install with: pip install -r requirements.txt
+#
+# NOTE: llama-cpp-python is NO LONGER required. Windows CUDA wheels commonly
+# miss cudart/cublas, and 0.3.34 does not support the qwen3_5 architecture
+# used by MeshMoe-4B. edge_node.py now discovers an existing OpenAI-compatible
+# server (llama-server / Ollama / LM Studio) and, if none is present, spawns the
+# bundled llama-server.exe itself (see spawn_llama_server). A node never goes
+# offline just because the in-process engine is missing.
+# Both packages below are optional; the node degrades gracefully without them.
 
-# Local model inference (llama.cpp)
-llama-cpp-python>=0.3.0
-
-# Hardware detection
+# Hardware detection (optional ? ctypes GlobalMemoryStatusEx fallback on Windows)
 psutil>=5.9.0

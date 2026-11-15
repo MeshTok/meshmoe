@@ -34,7 +34,7 @@
 
 1. **edge_node 必须换推理引擎**: 现有 llama-cpp-python 0.3.34 不支持 qwen3_5 架构。推荐改为 **llama-server.exe sidecar 进程**（本次验证的 b12340 版）：OpenAI 兼容 API + `--jinja` 原生 tool-calling 全部开箱即用，edge_node 只做中继。
 2. **reasoning_content 需处理**: 模型输出带独立思维链字段（`reasoning_content`），边缘中继要决定透传给 DSH 还是剥离（影响 token 计费与延迟体感）。
-3. **模型卡口径**: Q4_K_M 实测 2.71GB（仓库标注 2.52GB 是 GiB/GB 口径差），纯 CPU 路径未测（估计 5-8 t/s，需补测）。
+3. **模型卡口径**: Q4_K_M 实测 2.71GB（仓库标注 2.52GB 是 GiB/GB 口径差）。**纯 CPU 路径已补测（2026-11-15）**：`llama-server -ngl 0 -c 4096 --jinja --reasoning-budget 0`，模型 2.6s 加载完成，短回复约 **3.9 tok/s**，tool-calling 正确返回 `list_files`（延迟 5.6s）。结论：无 N 卡可用，`MESHMOE_NO_GPU=1` 走 `-ngl 0` 是可用的 CPU 档，只是慢一个数量级，适合轻量/夜间任务。
 
 ## 五、产物清单
 
@@ -47,7 +47,7 @@
 
 1. **DSH 真机接入**: llama-server 已是 OpenAI 兼容端点 (127.0.0.1:8081/v1)，可直接在 DSH 自定义模型里填入跑真实 agent 会话（套件B 的 mock 工具换成 DSH 真实工具集）
 2. **增量训练起点确认**: 以 NeoHorse-1-4B 为底座 + meshmoe 真实轨迹 → 产出 meshmoe-agent-4B，每次迭代用本评测集回归
-3. **补测**: CPU-only 速度、长上下文 (262K) 实际可用深度、Q8_0 对照
+3. **补测**: ~~CPU-only 速度~~ ✅ 已补测（见上）；长上下文 (262K) 实际可用深度、Q8_0 对照仍待做（阶段二）。
 
 ---
 

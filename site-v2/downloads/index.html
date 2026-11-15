@@ -1,0 +1,74 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Download · MeshMoe</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='12' fill='%230a0e0a'/%3E%3Ccircle cx='32' cy='32' r='6' fill='%2300ff9c'/%3E%3C/svg%3E">
+<style>
+:root{--bg:#0a0e0a;--fg:#e8f2e9;--muted:#8fa394;--accent:#00ff9c;--card:#121a14;--line:#1e2b22}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--fg);font:16px/1.7 -apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif}
+a{color:var(--accent);text-decoration:none}a:hover{text-decoration:underline}
+.wrap{max-width:860px;margin:0 auto;padding:0 24px}
+header{border-bottom:1px solid var(--line);padding:18px 0}
+header .wrap{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px}
+.logo{font-weight:800;letter-spacing:.5px;color:var(--fg);font-size:18px}
+nav a{color:var(--muted);margin-left:18px;font-size:14px}
+h1{font-size:38px;margin:46px 0 10px;line-height:1.2}h2{font-size:22px;margin:38px 0 10px}
+p,li{color:var(--muted)}strong{color:var(--fg)}
+.card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:20px 24px;margin:16px 0}
+.k{color:var(--accent);font-size:12px;letter-spacing:1px;text-transform:uppercase}
+.v{font-variant-numeric:tabular-nums}
+.row{display:flex;justify-content:space-between;gap:20px;padding:8px 0;border-bottom:1px solid var(--line)}
+.row:last-child{border-bottom:0}
+.big{font-size:30px;font-weight:700;color:var(--accent)}
+footer{border-top:1px solid var(--line);margin-top:60px;padding:26px 0;color:var(--muted);font-size:14px}
+footer a{color:var(--muted)}
+table{width:100%;border-collapse:collapse;margin:16px 0;font-size:14px}
+th,td{text-align:left;padding:10px;border-bottom:1px solid var(--line)}th{color:var(--accent)}
+.btn{display:inline-block;background:var(--accent);color:#04120a;font-weight:700;border-radius:8px;padding:12px 26px;margin:6px 8px 6px 0}
+.btn.ghost{background:transparent;border:1px solid var(--accent);color:var(--accent)}
+code{background:#0d150f;border:1px solid var(--line);border-radius:4px;padding:2px 6px;font-size:14px;color:#b8e8c8}
+</style></head><body>
+<header><div class="wrap">
+  <a class="logo" href="/">MESHMOE</a>
+  <nav><a href="/#how">How it works</a><a href="/claim/">Honor card</a><a href="/status/">Status</a><a href="/downloads/">Download</a><a href="/zh/">中文</a></nav>
+</div></header>
+<main class="wrap">
+
+<h1>Install MeshMoe</h1>
+<p>Two ways in. Both give you a free local MeshMoe-4B agent, and both let your machine join the mesh and burn Joules while idle. No account, no API key, no payment.</p>
+
+<div class="card">
+  <span class="k">Option A · for everyone</span>
+  <h2 style="margin-top:8px">MeshMoe Node (standalone)</h2>
+  <p>One user-level installer: llama.cpp runtime + MeshMoe-4B (2.7 GB) + edge node. Double-click, then start from the desktop shortcut. No admin rights, no DSH required. Works CPU-only.</p>
+  <a class="btn" href="https://github.com/MeshTok/meshmoe/releases/latest">Download the latest installer</a>
+  <a class="btn ghost" href="https://github.com/MeshTok/meshmoe">Source &amp; release notes</a>
+  <p style="margin-top:14px;font-size:14px">After install: <code>start-node.cmd</code> → node id prints in the log → check <a href="/claim/">your honor card</a>. Optional run-at-logon: <code>enable-autostart.cmd</code> (one <code>schtasks /delete</code> undoes it).</p>
+</div>
+
+<div class="card">
+  <span class="k">Option B · if you already use DSH</span>
+  <h2 style="margin-top:8px">dsh-plugin-meshmoe</h2>
+  <p>Adds a local <code>meshmoe-local</code> provider to DeepSeek Harness without overwriting your existing configuration, and auto-starts the runtime and mesh node.</p>
+  <a class="btn" href="https://github.com/MeshTok/dsh-plugin-meshmoe">Get the plugin</a>
+  <pre style="background:#0d150f;border:1px solid var(--line);border-radius:8px;padding:14px;overflow:auto;color:#b8e8c8"><code>dsh plugin install dsh-plugin-meshmoe</code></pre>
+</div>
+
+<div class="card">
+  <span class="k">Requirements</span>
+  <ul style="margin-bottom:0">
+    <li>Windows 10/11 x64 (other platforms: run <code>node/edge_node.py</code> directly)</li>
+    <li>~4 GB free RAM for CPU-only; NVIDIA GPU recommended (CUDA runtime bundled)</li>
+    <li>~3 GB disk for the model</li>
+  </ul>
+</div>
+
+<p style="color:var(--muted);font-size:14px">The old Flutter 0.3.x desktop client is deprecated — it only chatted and is no longer developed. <a href="/zh/">中文说明</a></p>
+
+</main>
+<footer><div class="wrap">
+  © 2026 MeshMoe · Turn your idle compute into community memory ·
+  <a href="/privacy/">Privacy</a> · <a href="/terms/">Terms</a> · <a href="/status/">Status</a> · <a href="/downloads/">Download</a>
+</div></footer>
+
+</body></html>

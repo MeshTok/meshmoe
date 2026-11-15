@@ -35,14 +35,14 @@
 - 免注册链路：本地 llama-server 无鉴权 → DSH keyless 路由 → 开箱即用
 - 生产化路径：NSIS/MSI 打包（runtime + 便携 DSH + 启动器），装完即"DSH + 本地模型 + mesh 节点"三合一
 
-## 2. 剩余工程项（按优先级）
+## 2. 剩余工程项（按优先级）— 2026-11-15 回填状态
 
-| 项 | 说明 |
-|---|---|
-| P0 mesh 节点接入 | edge_node v3：修 tool-calling 透传 + node_token 归属（owner 断链）+ qwen3_5 模型目录，然后由插件 host 代码或独立服务拉起 |
-| P1 插件 v1 | patch 改为运行时合并（不覆盖用户已有 provider）；UI 面板（节点状态/积分） |
-| P1 打包生产化 | NSIS 安装包 + 无 NVIDIA 卡时的 CPU 档（Q4 CPU 推理未实测，需补测） |
-| P2 增量训练 | NeoHorse-1-4B + meshmoe 真实轨迹 → meshmoe-agent-4B，用 eval_all.py 回归 |
+| 项 | 说明 | 状态 |
+|---|---|---|
+| P0 mesh 节点接入 | edge_node v3：修 tool-calling 透传 + node_token 归属（owner 断链）+ qwen3_5 模型目录，然后由插件 host 代码或独立服务拉起 | ✅ 已落地：v3 真机跑通，插件 `lib/index.js` 自动拉起 edge_node（`spawnEdgeNode`），独立安装包 `start-node.cmd` 亦可启动 |
+| P1 插件 v1 | patch 改为运行时合并（不覆盖用户已有 provider）；UI 面板（节点状态/积分） | ✅ 合并已落地（`lib/merge.js`）；UI 面板未做（非阻塞，Honor 数据由 `/claim/` 荣誉卡呈现） |
+| P1 打包生产化 | NSIS 安装包 + 无 NVIDIA 卡时的 CPU 档（Q4 CPU 推理未实测，需补测） | ✅ NSIS 已产出（`client-dsh/installer.nsi` + `build-installer.cmd`）；CPU 档 `MESHMOE_NO_GPU=1` → `-ngl 0`，本机补测通过 |
+| P2 增量训练 | NeoHorse-1-4B + meshmoe 真实轨迹 → meshmoe-agent-4B，用 eval_all.py 回归 | ⏳ 阶段二路线图，未启动 |
 
 ## 3. 关键风险
 

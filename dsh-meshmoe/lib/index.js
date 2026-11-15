@@ -5,7 +5,7 @@
 //   1. 检测本地模型服务 (127.0.0.1:8081) 是否存活; 不存活则拉起 llama-server
 //   2. patch 合并: 用户已有 provider 配置时生成合并版 patch (lib/merge.js)
 //   3. 荣誉轮询: 每 5 分钟读 edge_node v3 的 /health, 播报焦耳累计
-//   4. (预留) mesh 节点注册 — edge_node v3 就绪后在此接入
+//   4. 装机即入网: 检测 :4002 的 edge_node, 未运行则拉起 (connector 指向 :8081)
 //
 // Cordis 插件形态: name + inject + apply(ctx)。
 // 注: 首次加载如遇 DSH 宿主 API 差异, 以 dsh-pet (npm) 为参照修正签名。
@@ -87,6 +87,47 @@ function startLlamaServer(runtimeRoot) {
 }
 
 // ---------------------------------------------------------------------------
+// 装机即入网: 找到 edge_node.py 并拉起。优先级:
+//   1. MESHMOE_NODE_SCRIPT  显式路径
+//   2. MESHMOE_HOME/node/edge_node.py   (独立安装包)
+//   3. %LOCALAPPDATA%\MeshMoe\node\edge_node.py
+//   4. 开发机 D:\meshmoe\node\edge_node.py
+// 只装插件、没装节点包的用户: 返回 null, 由调用方给出安装提示(不报错)。
+// ---------------------------------------------------------------------------
+function findEdgeNodeScript() {
+  const explicit = process.env.MESHMOE_NODE_SCRIPT;
+  if (explicit && fs.existsSync(explicit)) return explicit;
+  const cands = [
+    process.env.MESHMOE_HOME && path.join(process.env.MESHMOE_HOME, "node", "edge_node.py"),
+    path.join(os.homedir(), "AppData", "Local", "MeshMoe", "node", "edge_node.py"),
+    "D:\\meshmoe\\node\\edge_node.py",
+  ];
+  for (const c of cands) {
+    if (c && fs.existsSync(c)) return c;
+  }
+  return null;
+}
+
+function spawnEdgeNode(script) {
+  const py = process.env.MESHMOE_PYTHON || "python";
+  const env = Object.assign({}, process.env, {
+    MESHMOE_CONNECTOR_URL: `http://127.0.0.1:${MESHMOE_PORT}`,
+    MESHMOE_MODEL: "MeshMoe-4B-Q4_K_M",
+    MESHMOE_PORT: String(EDGE_NODE_PORT),
+    MESHMOE_NODE_ID: process.env.MESHMOE_NODE_ID || os.hostname(),
+    PYTHONUNBUFFERED: "1",
+  });
+  const child = spawn(py, ["-u", script], {
+    env,
+    detached: false,
+    stdio: "ignore",
+    windowsHide: true,
+  });
+  child.on("error", () => {});
+  return child;
+}
+
+// ---------------------------------------------------------------------------
 // Cordis plugin definition
 // ---------------------------------------------------------------------------
 module.exports = {
@@ -164,9 +205,30 @@ module.exports = {
       return () => clearInterval(timer);
     }, "meshmoe: honor poller");
 
-    // ---- (预留) mesh 节点注册 ----
-    // edge_node v3 已含 node_token + joules_est 字段; 在此启动独立 edge_node
-    // 进程 (python edge_node.py) 即完成"装机即入网"。等待 credentials 服务
-    // 提供 node_token 的领取通道后启用。
+    // ---- 4. 装机即入网: 拉起 edge_node (本地模型就绪之后) ----
+    ctx.effect(async () => {
+      const edge = await fetchJson(EDGE_NODE_PORT, HEALTH_PATH);
+      if (edge.ok) {
+        log(`mesh node already online on :${EDGE_NODE_PORT}`);
+        return;
+      }
+      const script = findEdgeNodeScript();
+      if (!script) {
+        log("mesh node package not installed; local model still works. "
+          + "Install MeshMoe-Node-Setup.exe or set MESHMOE_NODE_SCRIPT to join the mesh.");
+        return;
+      }
+      // 等本地模型服务就绪(最多 ~30s), 否则节点会退化到内置引擎
+      await waitForHealth(RETRY_MAX);
+      log(`joining mesh: starting edge node from ${script} ...`);
+      const child = spawnEdgeNode(script);
+      if (ctx.onDispose) ctx.onDispose(() => { try { child.kill(); } catch {} });
+      // 给节点 6s 完成注册, 然后回读健康状态确认
+      await new Promise((r) => setTimeout(r, 6000));
+      const check = await fetchJson(EDGE_NODE_PORT, HEALTH_PATH);
+      log(check.ok && check.data
+        ? `mesh node online: auth=${check.data.authenticated ? "yes" : "pending"} joules=${check.data.joules_earned || 0}`
+        : "mesh node started but /health not ready yet (see node log)");
+    }, "meshmoe: join mesh (auto-start edge node)");
   },
 };

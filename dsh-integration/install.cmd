@@ -1,13 +1,15 @@
 @echo off
 rem ============================================================
-rem meshmoe Desktop installer prototype (v0.1)
+rem meshmoe runtime deploy helper (v1.0)
 rem Steps:
 rem   1. deploy runtime (llama-bin + model) from install media
 rem   2. verify local model endpoint
 rem   3. print DSH integration instructions
-rem NOTE: This is the packaging skeleton. The production installer
-rem       will ship as an NSIS/MSI bundle containing runtime\ and
-rem       a portable DSH, and register the mesh node service.
+rem The production installer is client-dsh\installer.nsi (NSIS), built by
+rem client-dsh\build-installer.cmd. This script is the lightweight opt-in
+rem alternative for people who prefer copying files by hand.
+rem Mesh node membership is provided by node\edge_node.py (v3), started by
+rem client-dsh\start-node.cmd; this helper only deploys the runtime.
 rem ============================================================
 setlocal EnableExtensions
 
@@ -45,6 +47,6 @@ echo [meshmoe] Done. Integration options:
 echo   A. Bundled DSH: run %DEST%\run-meshmoe-dsh.cmd desktop
 echo   B. Existing DSH: copy meshmoe-patch.yml and launch with
 echo      dsh headless --patch "%DEST%\meshmoe-patch.yml" "task"
-echo   C. Mesh node membership: edge_node v3 integration (P0 item,
-echo      tool-calling passthrough + node_token ownership) - next release.
+echo   C. Mesh node membership: run %LOCALAPPDATA%\MeshMoe\scripts\start-node.cmd
+echo      (or, from this checkout, client-dsh\start-node.cmd).
 exit /b 0

@@ -4,8 +4,8 @@
 #   1. 向 llm-pi-ai 注册 meshmoe-local 本地模型路由 (keyless, 免注册)
 #   2. 把默认模型切到 meshmoe-local/meshmoe-4b
 # 模型: MeshMoe-4B (基于 TokenRhythm/NeoHorse-1-4B, Qwen3.5-4B 后训练, Apache-2.0)
-# 注意: patch entry 是整块替换 —— 用户后续在 GUI 加的其它 provider 会被
-#       本补丁覆盖。v1 版本将改为运行时合并 (host 代码读现有 config 再写回)。
+# 注意: DSH 的 patch entry 是整块替换。插件加载时 lib/merge.js 会读用户现有
+#       patch 并把本条目合并进去(其余 provider 原样保留), 不会覆盖 GUI 配置。
 # ============================================================================
 - id: llm-pi-ai
   name: '@deepseek-ai/dsh-llm-pi-ai'

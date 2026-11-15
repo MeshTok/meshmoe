@@ -1,0 +1,79 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Network Status · MeshMoe</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='12' fill='%230a0e0a'/%3E%3Ccircle cx='32' cy='32' r='6' fill='%2300ff9c'/%3E%3C/svg%3E">
+<style>
+:root{--bg:#0a0e0a;--fg:#e8f2e9;--muted:#8fa394;--accent:#00ff9c;--card:#121a14;--line:#1e2b22}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--fg);font:16px/1.7 -apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif}
+a{color:var(--accent);text-decoration:none}a:hover{text-decoration:underline}
+.wrap{max-width:860px;margin:0 auto;padding:0 24px}
+header{border-bottom:1px solid var(--line);padding:18px 0}
+header .wrap{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px}
+.logo{font-weight:800;letter-spacing:.5px;color:var(--fg);font-size:18px}
+nav a{color:var(--muted);margin-left:18px;font-size:14px}
+h1{font-size:38px;margin:46px 0 10px;line-height:1.2}h2{font-size:22px;margin:38px 0 10px}
+p,li{color:var(--muted)}strong{color:var(--fg)}
+.card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:20px 24px;margin:16px 0}
+.k{color:var(--accent);font-size:12px;letter-spacing:1px;text-transform:uppercase}
+.v{font-variant-numeric:tabular-nums}
+.row{display:flex;justify-content:space-between;gap:20px;padding:8px 0;border-bottom:1px solid var(--line)}
+.row:last-child{border-bottom:0}
+.big{font-size:30px;font-weight:700;color:var(--accent)}
+footer{border-top:1px solid var(--line);margin-top:60px;padding:26px 0;color:var(--muted);font-size:14px}
+footer a{color:var(--muted)}
+table{width:100%;border-collapse:collapse;margin:16px 0;font-size:14px}
+th,td{text-align:left;padding:10px;border-bottom:1px solid var(--line)}th{color:var(--accent)}
+.btn{display:inline-block;background:var(--accent);color:#04120a;font-weight:700;border-radius:8px;padding:12px 26px;margin:6px 8px 6px 0}
+.btn.ghost{background:transparent;border:1px solid var(--accent);color:var(--accent)}
+code{background:#0d150f;border:1px solid var(--line);border-radius:4px;padding:2px 6px;font-size:14px;color:#b8e8c8}
+</style></head><body>
+<header><div class="wrap">
+  <a class="logo" href="/">MESHMOE</a>
+  <nav><a href="/#how">How it works</a><a href="/claim/">Honor card</a><a href="/status/">Status</a><a href="/downloads/">Download</a><a href="/zh/">中文</a></nav>
+</div></header>
+<main class="wrap">
+
+<h1>Network status</h1>
+<p>Live figures from <a href="https://api.meshmoe.com/node/health">api.meshmoe.com</a>. Joules are an append-only honor ledger; a node's totals can be verified on its <a href="/claim/">honor card</a>.</p>
+<div class="card">
+  <div class="row"><span class="k">Router</span><span class="v" id="svc">loading…</span></div>
+  <div class="row"><span class="k">Online nodes</span><span class="v big" id="online">–</span></div>
+  <div class="row"><span class="k">Queued tasks</span><span class="v big" id="queued">–</span></div>
+  <div class="row"><span class="k">Updated</span><span class="v" id="ts">–</span></div>
+</div>
+<h2>Nodes</h2>
+<p>Reputation and task counts as reported by the router. Node ids are pseudonymous machine names.</p>
+<table><thead><tr><th>Node</th><th>Tasks</th><th>Success</th><th>Avg latency</th><th>Reputation</th></tr></thead>
+<tbody id="nodes"><tr><td colspan="5">loading…</td></tr></tbody></table>
+<h2>Founding nodes</h2>
+<p>The founding team runs nodes on real machines and publishes their numbers here rather than a fabricated sample. This page lists every node the router currently sees, including those nodes.</p>
+
+</main>
+<footer><div class="wrap">
+  © 2026 MeshMoe · Turn your idle compute into community memory ·
+  <a href="/privacy/">Privacy</a> · <a href="/terms/">Terms</a> · <a href="/status/">Status</a> · <a href="/downloads/">Download</a>
+</div></footer>
+
+<script>
+const el = id => document.getElementById(id);
+async function refresh(){
+  try{
+    const h = await (await fetch("https://api.meshmoe.com/node/health")).json();
+    el("svc").textContent = h.service || "MeshMoE Router";
+    el("online").textContent = h.online_nodes ?? "–";
+    el("queued").textContent = h.queued_tasks ?? "–";
+    el("ts").textContent = new Date().toLocaleString();
+  }catch(e){ el("svc").textContent = "router unreachable"; el("ts").textContent = e.message; }
+  try{
+    const s = await (await fetch("https://api.meshmoe.com/node/stats")).json();
+    const rows = Object.entries(s).map(([id,d]) =>
+      `<tr><td>${id}</td><td>${d.total_tasks ?? 0}</td><td>${d.success_tasks ?? 0}</td>`+
+      `<td>${d.avg_latency ? Math.round(d.avg_latency)+" ms" : "–"}</td><td>${d.reputation ?? 0}</td></tr>`).join("");
+    el("nodes").innerHTML = rows || '<tr><td colspan="5">no nodes online</td></tr>';
+  }catch(e){ el("nodes").innerHTML = '<tr><td colspan="5">stats unavailable</td></tr>'; }
+}
+refresh(); setInterval(refresh, 30000);
+</script>
+
+</body></html>

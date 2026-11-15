@@ -1,0 +1,63 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Privacy · MeshMoe</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='12' fill='%230a0e0a'/%3E%3Ccircle cx='32' cy='32' r='6' fill='%2300ff9c'/%3E%3C/svg%3E">
+<style>
+:root{--bg:#0a0e0a;--fg:#e8f2e9;--muted:#8fa394;--accent:#00ff9c;--card:#121a14;--line:#1e2b22}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--fg);font:16px/1.7 -apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif}
+a{color:var(--accent);text-decoration:none}a:hover{text-decoration:underline}
+.wrap{max-width:860px;margin:0 auto;padding:0 24px}
+header{border-bottom:1px solid var(--line);padding:18px 0}
+header .wrap{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px}
+.logo{font-weight:800;letter-spacing:.5px;color:var(--fg);font-size:18px}
+nav a{color:var(--muted);margin-left:18px;font-size:14px}
+h1{font-size:38px;margin:46px 0 10px;line-height:1.2}h2{font-size:22px;margin:38px 0 10px}
+p,li{color:var(--muted)}strong{color:var(--fg)}
+.card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:20px 24px;margin:16px 0}
+.k{color:var(--accent);font-size:12px;letter-spacing:1px;text-transform:uppercase}
+.v{font-variant-numeric:tabular-nums}
+.row{display:flex;justify-content:space-between;gap:20px;padding:8px 0;border-bottom:1px solid var(--line)}
+.row:last-child{border-bottom:0}
+.big{font-size:30px;font-weight:700;color:var(--accent)}
+footer{border-top:1px solid var(--line);margin-top:60px;padding:26px 0;color:var(--muted);font-size:14px}
+footer a{color:var(--muted)}
+table{width:100%;border-collapse:collapse;margin:16px 0;font-size:14px}
+th,td{text-align:left;padding:10px;border-bottom:1px solid var(--line)}th{color:var(--accent)}
+.btn{display:inline-block;background:var(--accent);color:#04120a;font-weight:700;border-radius:8px;padding:12px 26px;margin:6px 8px 6px 0}
+.btn.ghost{background:transparent;border:1px solid var(--accent);color:var(--accent)}
+code{background:#0d150f;border:1px solid var(--line);border-radius:4px;padding:2px 6px;font-size:14px;color:#b8e8c8}
+</style></head><body>
+<header><div class="wrap">
+  <a class="logo" href="/">MESHMOE</a>
+  <nav><a href="/#how">How it works</a><a href="/claim/">Honor card</a><a href="/status/">Status</a><a href="/downloads/">Download</a><a href="/zh/">中文</a></nav>
+</div></header>
+<main class="wrap">
+
+<h1>Privacy</h1>
+<p>MeshMoe is built so that the default answer to "where is my data?" is <strong>on my own machine</strong>.</p>
+<h2>What stays on your machine</h2>
+<ul>
+<li><strong>Local inference never leaves your computer.</strong> When you use the bundled MeshMoe-4B model through DSH, prompts and replies are processed by <code>llama-server</code> bound to <code>127.0.0.1</code>.</li>
+<li>Mesh task payloads: when your node serves a community task, that task's content passes through the task channel to your machine so it can be computed. It is not stored as training data by default.</li>
+</ul>
+<h2>What the network stores</h2>
+<ul>
+<li>A <strong>node identity</strong>: an anonymous <code>node_id</code> and a hash of its token (the token itself lives in <code>~/.meshmoe/node.json</code> on your machine, not on our servers).</li>
+<li>Hardware class (CPU / GPU model, RAM) to route suitable tasks, and the region reported by the node.</li>
+<li>An <strong>append-only Joule ledger</strong>: energy contributed per task, never subtracted, never transferable. It is public — that is the point of an honor system.</li>
+</ul>
+<h2>Accounts and claiming</h2>
+<p>Claiming a node binds an account name to its honor history. Today accounts are email-style identifiers with no password; we therefore recommend claiming only with an address you control, and we are adding verified login before claiming is promoted. Claiming is irreversible: honor cannot be transferred.</p>
+<h2>Training data</h2>
+<p>Contributing task trajectories to train future models is <strong>opt-in, off by default, revocable at any time</strong>, with published sanitization standards. Until you explicitly enable it, no trajectory is collected for training.</p>
+<h2>Contact</h2>
+<p>Questions or deletion requests: open an issue at <a href="https://github.com/MeshTok/meshmoe">github.com/MeshTok/meshmoe</a>.</p>
+
+</main>
+<footer><div class="wrap">
+  © 2026 MeshMoe · Turn your idle compute into community memory ·
+  <a href="/privacy/">Privacy</a> · <a href="/terms/">Terms</a> · <a href="/status/">Status</a> · <a href="/downloads/">Download</a>
+</div></footer>
+
+</body></html>
